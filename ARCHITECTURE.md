@@ -9,7 +9,7 @@
 | Styling | Tailwind + CSS variables | Design tokens as CSS vars, Tailwind for utilities only |
 | Database | Antigravity DB (Postgres) | Built-in, no external setup |
 | Auth | Antigravity Auth | Built-in session management |
-| AI | Anthropic Claude API | All 6 agent modules |
+| AI | Google Gemini API | All 6 agent modules |
 | Streaming | Server-Sent Events (SSE) | Real-time agent output to frontend |
 | Validation | Zod | All API inputs + agent JSON outputs |
 | Deployment | Antigravity / Vercel | One-click from Antigravity IDE |
@@ -22,13 +22,13 @@
 
 | Module | Model | Features |
 |--------|-------|----------|
-| Full Launch (Architect) | claude-opus-4-6 | Agent Teams + extended thinking (10k tokens) |
-| Research | claude-sonnet-4-6 | web_search tool enabled |
-| Branding | claude-sonnet-4-6 | Structured JSON output + Zod validation |
-| Marketing | claude-sonnet-4-6 | Brand context injection + structured output |
-| Landing Page | claude-sonnet-4-6 | Code generation + Antigravity deploy hooks |
-| Feasibility | claude-sonnet-4-6 | Extended thinking (8k tokens) |
-| Formatting/cleanup | claude-haiku-4-5 | Mechanical tasks only |
+| Full Launch (Architect) | gemini-2.5-pro | Agent Teams + extended thinking (10k tokens) |
+| Research | gemini-2.5-flash | web_search tool enabled |
+| Branding | gemini-2.5-flash | Structured JSON output + Zod validation |
+| Marketing | gemini-2.5-flash | Brand context injection + structured output |
+| Landing Page | gemini-2.5-flash | Code generation + Antigravity deploy hooks |
+| Feasibility | gemini-2.5-flash | Extended thinking (8k tokens) |
+| Formatting/cleanup | gemini-2.5-flash | Mechanical tasks only |
 
 All models use prompt caching on system prompts.
 
@@ -278,7 +278,7 @@ NOTE: Content Factory (Marketing) is NEVER spawned in Full Launch.
 
 ```bash
 # Required
-ANTHROPIC_API_KEY=
+GEMINI_API_KEY=
 ANTIGRAVITY_PROJECT_ID=
 NEXT_PUBLIC_APP_URL=
 
