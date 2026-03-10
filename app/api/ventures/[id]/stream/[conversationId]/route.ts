@@ -1,5 +1,5 @@
 // app/api/ventures/[id]/stream/[conversationId]/route.ts
-import { requireAuth } from '@/lib/auth'
+import { requireAuth, AuthError, isAuthError } from '@/lib/auth'
 import { getVenture, getConversation } from '@/lib/queries'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -81,7 +81,7 @@ export async function GET(
             },
         })
     } catch (e) {
-        if (e instanceof NextResponse) return e
+        if (isAuthError(e)) return e.toResponse()
         return NextResponse.json({ error: 'Internal error' }, { status: 500 })
     }
 }
