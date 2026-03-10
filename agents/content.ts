@@ -177,7 +177,7 @@ Output ONLY the JSON — no markdown fences, no explanation after.
 // ── Agent Runner ──────────────────────────────────────────────────────────────
 
 export async function runContentAgent(
-    venture: { ventureId: string; name: string; context: Record<string, unknown> },
+    venture: { ventureId: string; name: string; globalIdea?: string; context: Record<string, unknown> },
     onStream: (line: string) => Promise<void>,
     onComplete: (result: ContentOutput) => Promise<void>
 ): Promise<void> {
@@ -190,7 +190,7 @@ export async function runContentAgent(
 
     const userMessage = `Build a complete marketing package for this venture.
 
-Venture: ${venture.name}
+${venture.globalIdea ? `Global Startup Vision: ${venture.globalIdea}\n` : ''}Specific Venture Focus: ${venture.name}
 
 Market research:
 ${JSON.stringify(venture.context.research, null, 2)}
@@ -206,7 +206,7 @@ Output the full ContentOutput JSON at the end.`
         // Custom model config: higher temperature for creative copy, larger output for 90 posts
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
         const model = genAI.getGenerativeModel({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-2.5-flash',
             generationConfig: {
                 temperature: 0.8,
                 topP: 0.95,
