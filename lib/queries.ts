@@ -1,6 +1,23 @@
 // lib/queries.ts
 import { createDb } from '@/lib/db'
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 500): Promise<T> {
+  let lastError: any
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fn()
+    } catch (error) {
+      lastError = error
+      if (i < retries - 1) {
+        await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)))
+      }
+    }
+  }
+  throw lastError
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface Project {
@@ -52,15 +69,17 @@ export async function createProject(
   description = '',
   icon = '🚀'
 ): Promise<Project> {
-  const db = await createDb()
-  const { data, error } = await db
-    .from('projects')
-    .insert({ user_id: userId, name, description, icon })
-    .select()
-    .single()
+  return withRetry(async () => {
+    const db = await createDb()
+    const { data, error } = await db
+      .from('projects')
+      .insert({ user_id: userId, name, description, icon })
+      .select()
+      .single()
 
-  if (error) throw new Error(`createProject failed: ${error.message}`)
-  return data
+    if (error) throw new Error(`createProject failed: ${error.message}`)
+    return data
+  })
 }
 
 export async function getProjectsByUser(userId: string): Promise<Project[]> {
@@ -111,22 +130,24 @@ export async function deleteProject(id: string): Promise<void> {
 // ─── Ventures ─────────────────────────────────────────────────────────────────
 
 export async function createVenture(userId: string, name: string, projectId?: string): Promise<Venture> {
-  const db = await createDb()
-  const insertData: Record<string, unknown> = {
-    user_id: userId,
-    name,
-    context: { research: null, branding: null, marketing: null, landing: null, feasibility: null },
-  }
-  if (projectId) insertData.project_id = projectId
+  return withRetry(async () => {
+    const db = await createDb()
+    const insertData: Record<string, unknown> = {
+      user_id: userId,
+      name,
+      context: { research: null, branding: null, marketing: null, landing: null, feasibility: null },
+    }
+    if (projectId) insertData.project_id = projectId
 
-  const { data, error } = await db
-    .from('ventures')
-    .insert(insertData)
-    .select()
-    .single()
+    const { data, error } = await db
+      .from('ventures')
+      .insert(insertData)
+      .select()
+      .single()
 
-  if (error) throw new Error(`createVenture failed: ${error.message}`)
-  return data
+    if (error) throw new Error(`createVenture failed: ${error.message}`)
+    return data
+  })
 }
 
 export async function getVenturesByUser(userId: string): Promise<Venture[]> {
@@ -215,15 +236,17 @@ export async function createConversation(
   moduleId: Conversation['module_id'],
   prompt: string
 ): Promise<Conversation> {
-  const db = await createDb()
-  const { data, error } = await db
-    .from('conversations')
-    .insert({ venture_id: ventureId, module_id: moduleId, prompt, status: 'running', stream_output: [], result: {} })
-    .select()
-    .single()
+  return withRetry(async () => {
+    const db = await createDb()
+    const { data, error } = await db
+      .from('conversations')
+      .insert({ venture_id: ventureId, module_id: moduleId, prompt, status: 'running', stream_output: [], result: {} })
+      .select()
+      .single()
 
-  if (error) throw new Error(`createConversation failed: ${error.message}`)
-  return data
+    if (error) throw new Error(`createConversation failed: ${error.message}`)
+    return data
+  })
 }
 
 export async function updateConversationStatus(
@@ -296,4 +319,29 @@ export async function getConversation(id: string): Promise<Conversation | null> 
 
   if (error) return null
   return data
+}
+
+// ─── User Ideas ───────────────────────────────────────────────────────────────
+
+export async function getUserIdea(userId: string): Promise<string | null> {
+  const db = await createDb()
+  const { data } = await db
+    .from('user_ideas')
+    .select('idea_text')
+    .eq('user_id', userId)
+    .single()
+  return data?.idea_text ?? null
+}
+
+export async function setUserIdea(userId: string, ideaText: string): Promise<void> {
+  return withRetry(async () => {
+    const db = await createDb()
+    const { error } = await db
+      .from('user_ideas')
+      .upsert(
+        { user_id: userId, idea_text: ideaText, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id' }
+      )
+    if (error) throw new Error(`setUserIdea failed: ${error.message}`)
+  })
 }
