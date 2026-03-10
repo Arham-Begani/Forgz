@@ -1,21 +1,47 @@
+/* app/globals.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #faf9f6;
+  --sidebar: #f4f2ed;
+  --card: #ffffff;
+  --border: #e8e4dc;
+  --text: #1c1917;
+  --text-soft: #44403c;
+  --muted: #a8a29e;
+  --nav-active: #edeae3;
+  --accent: #c07a3a;
+  --accent-soft: rgba(192, 122, 58, 0.1);
+  --input-bg: #ffffff;
+  --stream-bg: #f8f6f1;
+  --stream-text: #78716c;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  --bg: #111110;
+  --sidebar: #0d0d0c;
+  --card: #1a1917;
+  --border: #272523;
+  --text: #e8e4dc;
+  --text-soft: #a8a29e;
+  --muted: #57534e;
+  --nav-active: #1f1e1b;
+  --accent: #d4924a;
+  --accent-soft: rgba(212, 146, 74, 0.1);
+  --input-bg: #161513;
+  --stream-bg: #0f0e0c;
+  --stream-text: #57534e;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  margin: 0;
 }
