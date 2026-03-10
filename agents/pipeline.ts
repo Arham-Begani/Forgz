@@ -201,7 +201,7 @@ Output ONLY the JSON — no markdown fences, no explanation after.
 // ── Agent Runner ──────────────────────────────────────────────────────────────
 
 export async function runPipelineAgent(
-    venture: { ventureId: string; name: string; context: Record<string, unknown> },
+    venture: { ventureId: string; name: string; globalIdea?: string; context: Record<string, unknown> },
     onStream: (line: string) => Promise<void>,
     onComplete: (result: PipelineOutput) => Promise<void>
 ): Promise<void> {
@@ -214,7 +214,7 @@ export async function runPipelineAgent(
 
     const userMessage = `Generate a complete landing page for this venture.
 
-Venture: ${venture.name}
+${venture.globalIdea ? `Global Startup Vision: ${venture.globalIdea}\n` : ''}Specific Venture Focus: ${venture.name}
 
 Research findings:
 ${JSON.stringify(venture.context.research, null, 2)}
@@ -240,7 +240,7 @@ Output the full PipelineOutput JSON at the end.`
         // Custom model config: lower temp for code gen accuracy, larger output for full page component
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
         const model = genAI.getGenerativeModel({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-2.5-flash',
             generationConfig: {
                 temperature: 0.5,
                 topP: 0.9,
