@@ -162,7 +162,7 @@ Output ONLY the JSON — no markdown fences, no explanation after.
 // ── Agent Runner ──────────────────────────────────────────────────────────────
 
 export async function runIdentityAgent(
-    venture: { ventureId: string; name: string; context: Record<string, unknown> },
+    venture: { ventureId: string; name: string; globalIdea?: string; context: Record<string, unknown> },
     onStream: (line: string) => Promise<void>,
     onComplete: (result: IdentityOutput) => Promise<void>
 ): Promise<void> {
@@ -172,7 +172,7 @@ export async function runIdentityAgent(
 
     const userMessage = `Build a complete Brand Bible for this venture.
 
-Venture name: ${venture.name}
+${venture.globalIdea ? `Global Startup Vision: ${venture.globalIdea}\n` : ''}Specific Venture Focus: ${venture.name}
 
 Market research (use this to ground every brand decision):
 ${JSON.stringify(venture.context.research, null, 2)}
