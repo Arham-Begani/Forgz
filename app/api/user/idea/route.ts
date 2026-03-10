@@ -1,5 +1,5 @@
 // app/api/user/idea/route.ts
-import { requireAuth } from '@/lib/auth'
+import { requireAuth, AuthError, isAuthError } from '@/lib/auth'
 import { getUserIdea, setUserIdea } from '@/lib/queries'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
@@ -10,7 +10,7 @@ export async function GET() {
     const idea = await getUserIdea(session.userId)
     return NextResponse.json({ idea })
   } catch (e) {
-    if (e instanceof NextResponse) return e
+    if (isAuthError(e)) return e.toResponse()
     return NextResponse.json({ idea: null })
   }
 }
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     await setUserIdea(session.userId, result.data)
     return NextResponse.json({ idea: result.data })
   } catch (e) {
-    if (e instanceof NextResponse) return e
+    if (isAuthError(e)) return e.toResponse()
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }
 }
