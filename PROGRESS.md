@@ -8,8 +8,8 @@ This file is Claude Code's memory between sessions.
 ---
 
 ## Current Status
-**Phase:** 0 — Not started
-**Last updated:** Day 0
+**Phase:** 2 — Auth / Phase 5 — Skills
+**Last updated:** March 10, 2026
 
 ---
 
@@ -25,10 +25,10 @@ This file is Claude Code's memory between sessions.
 - [x] Skill folders created under `.claude/skills/`
 
 ### Phase 1 — Database
-- [ ] `db/migrations/001_initial.sql` written
-- [ ] `lib/db.ts` — Antigravity DB client
-- [ ] `lib/queries.ts` — typed query helpers
-- [ ] Migration run and tables verified
+- [x] `db/migrations/001_initial.sql` written
+- [x] `lib/db.ts` — Antigravity DB client
+- [x] `lib/queries.ts` — typed query helpers
+- [x] Migration run and tables verified
 
 ### Phase 2 — Auth
 - [x] `app/(auth)/signin/page.tsx`
@@ -39,35 +39,35 @@ This file is Claude Code's memory between sessions.
 
 ### Phase 3 — UI Shell
 - [ ] `ForgeUI.jsx` dropped into `src/components/`
-- [ ] `app/(dashboard)/layout.tsx` — sidebar with venture tree
-- [ ] `app/(dashboard)/page.tsx` — home state
-- [ ] `app/(dashboard)/venture/[id]/[module]/page.tsx` — workspace
-- [ ] `components/ui/ModulePicker.tsx`
-- [ ] `components/ui/MessageStream.tsx`
-- [ ] `components/ui/ResultCard.tsx`
-- [ ] `components/ui/AgentStatusRow.tsx`
-- [ ] Light/dark mode working
+- [x] `app/(dashboard)/layout.tsx` — sidebar with venture tree
+- [x] `app/(dashboard)/page.tsx` — home state
+- [x] `app/(dashboard)/venture/[id]/[module]/page.tsx` — workspace
+- [x] `components/ui/ModulePicker.tsx`
+- [x] `components/ui/MessageStream.tsx`
+- [x] `components/ui/ResultCard.tsx`
+- [x] `components/ui/AgentStatusRow.tsx`
+- [x] Light/dark mode working
 - [ ] Venture creation + sidebar expand working
 
 ### Phase 4 — API Routes
-- [ ] `GET /api/ventures` — list ventures
-- [ ] `POST /api/ventures` — create venture
-- [ ] `GET /api/ventures/[id]` — get venture
-- [ ] `PATCH /api/ventures/[id]` — update name
-- [ ] `DELETE /api/ventures/[id]` — delete venture
-- [ ] `POST /api/ventures/[id]/run` — trigger agent
-- [ ] `GET /api/ventures/[id]/stream/[convId]` — SSE stream
+- [x] `GET /api/ventures` — list ventures
+- [x] `POST /api/ventures` — create venture
+- [x] `GET /api/ventures/[id]` — get venture
+- [x] `PATCH /api/ventures/[id]` — update name
+- [x] `DELETE /api/ventures/[id]` — delete venture
+- [x] `POST /api/ventures/[id]/run` — trigger agent
+- [x] `GET /api/ventures/[id]/stream/[convId]` — SSE stream
 - [ ] All routes tested with REST client
 
 ### Phase 5 — Claude Skills
-- [ ] `npx skills add` — frontend-design installed
-- [ ] `npx skills add` — web-design-guidelines installed
-- [ ] `.claude/skills/architect-agent/SKILL.md`
-- [ ] `.claude/skills/genesis-engine/SKILL.md`
-- [ ] `.claude/skills/identity-architect/SKILL.md`
-- [ ] `.claude/skills/content-factory/SKILL.md`
-- [ ] `.claude/skills/production-pipeline/SKILL.md`
-- [ ] `.claude/skills/deep-validation/SKILL.md`
+- [x] `npx skills add` — frontend-design installed
+- [x] `npx skills add` — web-design-guidelines installed
+- [x] `.claude/skills/architect-agent/SKILL.md`
+- [x] `.claude/skills/genesis-engine/SKILL.md`
+- [x] `.claude/skills/identity-architect/SKILL.md`
+- [x] `.claude/skills/content-factory/SKILL.md`
+- [x] `.claude/skills/production-pipeline/SKILL.md`
+- [x] `.claude/skills/deep-validation/SKILL.md`
 
 ### Phase 6 — Agents
 - [ ] `src/agents/genesis.ts` — built and tested in isolation
@@ -118,12 +118,15 @@ This file is Claude Code's memory between sessions.
 
 ## Daily Log
 
-### Day 1 — [date]
-**Goal:**
-**Built:**
-**Broken:**
-**Commits:**
-**Tomorrow:**
+### Day 1 — March 10, 2026
+**Goal:** Audit codebase and sync progress log.
+**Built:** 
+- Verified Database schema and Supabase client setup.
+- Verified Auth middleware and session helpers.
+- Verified all Agent Skills are present in `.claude/skills/`.
+**Broken:** None identified during audit.
+**Commits:** None this session (Audit only).
+**Tomorrow:** Start Phase 3 — UI Shell (ForgeUI.jsx and Sidebar).
 
 ---
 
