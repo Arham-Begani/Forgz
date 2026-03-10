@@ -52,6 +52,16 @@ export default function GreetingPage() {
       })
 
       if (res.ok) {
+        try {
+          await fetch('/api/ventures', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: projectName ? `${projectName} - v1` : 'Initial Venture', projectId }),
+          })
+        } catch (err) {
+          console.error('Failed to create initial venture:', err)
+        }
+        
         router.push(`/dashboard/project/${projectId}`)
       }
     } catch (err) {
