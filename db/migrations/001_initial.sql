@@ -1,18 +1,19 @@
 -- 001_initial.sql — Forge schema
 
--- Users
-CREATE TABLE users (
-  id          UUID PRIMARY KEY,
+-- Users (Synchronized with auth.users via 000_supabase_auth_sync.sql)
+CREATE TABLE IF NOT EXISTS users (
+  id          UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email       TEXT UNIQUE NOT NULL,
   name        TEXT,
   plan        TEXT DEFAULT 'free',
-  created_at  TIMESTAMPTZ DEFAULT NOW()
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Ventures
-CREATE TABLE ventures (
+CREATE TABLE IF NOT EXISTS ventures (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id     UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   name        TEXT NOT NULL,
   context     JSONB DEFAULT '{}',
   created_at  TIMESTAMPTZ DEFAULT NOW(),
@@ -20,7 +21,7 @@ CREATE TABLE ventures (
 );
 
 -- Conversations
-CREATE TABLE conversations (
+CREATE TABLE IF NOT EXISTS conversations (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   venture_id    UUID NOT NULL REFERENCES ventures(id) ON DELETE CASCADE,
   module_id     TEXT NOT NULL CHECK (module_id IN ('research','branding','marketing','landing','feasibility','full-launch')),
