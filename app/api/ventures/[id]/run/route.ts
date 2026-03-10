@@ -1,5 +1,5 @@
 // app/api/ventures/[id]/run/route.ts
-import { requireAuth } from '@/lib/auth'
+import { requireAuth, AuthError, isAuthError } from '@/lib/auth'
 import {
     getVenture,
     createConversation,
@@ -33,7 +33,7 @@ async function runAgent(
     const venture = await getVenture(ventureId, userId)
     if (!venture) throw new Error('Venture not found')
 
-    const project = venture.project_id ? await getProject(venture.project_id) : null
+    const project = venture.project_id ? await getProject(venture.project_id, userId) : null
 
     const ventureInput = {
         ventureId: venture.id,
@@ -156,7 +156,7 @@ export async function POST(
             { status: 202 }
         )
     } catch (e) {
-        if (e instanceof NextResponse) return e
+        if (isAuthError(e)) return e.toResponse()
         return NextResponse.json({ error: 'Internal error' }, { status: 500 })
     }
 }
