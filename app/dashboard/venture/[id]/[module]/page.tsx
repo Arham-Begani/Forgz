@@ -466,7 +466,7 @@ export default function ModulePage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                     {FULL_LAUNCH_AGENTS.map(agent => {
                       const s = entry.agentStatuses[agent.key] ?? { status: 'pending', detail: agent.detail }
-                      const agentIdMap: Record<string, string> = {
+                      const agentIdMap: Record<string, 'genesis' | 'identity' | 'pipeline' | 'feasibility'> = {
                         research: 'genesis',
                         branding: 'identity',
                         landing: 'pipeline',
