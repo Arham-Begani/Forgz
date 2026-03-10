@@ -38,8 +38,13 @@ async function runAgent(
         context: venture.context as unknown as Record<string, unknown>,
     }
 
+    let buffer = ''
     const onStream = async (chunk: string) => {
-        const lines = chunk.split('\n')
+        buffer += chunk
+        const lines = buffer.split('\n')
+        // Keep the last partial line in the buffer
+        buffer = lines.pop() ?? ''
+        
         for (const line of lines) {
             if (line.trim()) await appendStreamLine(conversationId, line)
         }
@@ -98,6 +103,11 @@ async function runAgent(
 
             default:
                 throw new Error(`Unknown moduleId: ${moduleId}`)
+        }
+
+        // Flush remaining buffer
+        if (buffer.trim()) {
+            await appendStreamLine(conversationId, buffer.trim())
         }
 
         await updateConversationStatus(conversationId, 'complete')

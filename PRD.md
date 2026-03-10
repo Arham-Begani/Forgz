@@ -32,7 +32,7 @@ A single prompt triggers an Architect Agent that decomposes the request into tas
 ## Core Modules
 
 ### 1. Full Launch (Autonomous)
-Runs Research + Branding + Landing Page + Feasibility together as a coordinated Agent Team. Marketing is explicitly excluded — it always runs as its own separate module. The Architect Agent (gemini-2.5-pro) orchestrates four specialist agents in parallel using Agent Teams.
+Runs Research + Branding + Landing Page + Feasibility together as a coordinated Agent Team. Marketing is explicitly excluded — it always runs as its own separate module. The Architect Agent (gemini-3-pro) orchestrates four specialist agents in parallel using Agent Teams.
 
 **Agents involved:**
 - Genesis Engine (Research)
@@ -47,7 +47,7 @@ Runs Research + Branding + Landing Page + Feasibility together as a coordinated 
 ### 2. Research
 Scans real-time market trends, Reddit pain points, and competitor gaps. Generates a full feasibility overview including TAM/SAM/SOM, SWOT analysis, and a risk matrix. Produces 10 ranked high-alpha business concepts.
 
-**Agent:** Genesis Engine (gemini-2.5-flash + web_search)
+**Agent:** Genesis Engine (gemini-3-flash-preview + web_search)
 
 **Output:**
 - TAM/SAM/SOM with cited sources
@@ -62,7 +62,7 @@ Scans real-time market trends, Reddit pain points, and competitor gaps. Generate
 ### 3. Branding
 Generates a full Brand Bible beyond just a name — typography, color psychology, mission-driven brand voice, logo concept descriptions, and a complete UI Kit for the landing page.
 
-**Agent:** Identity Architect (gemini-2.5-flash)
+**Agent:** Identity Architect (gemini-3-flash-preview)
 
 **Output:**
 - 5 brand name candidates + recommended pick
@@ -79,7 +79,7 @@ Generates a full Brand Bible beyond just a name — typography, color psychology
 ### 4. Marketing
 Develops a comprehensive 30-day Go-to-Market strategy. Generates a social media calendar with platform-specific captions (X, LinkedIn, Instagram) and SEO-optimized blog outlines designed to rank from Day 1. Always runs independently — never part of Full Launch.
 
-**Agent:** Content Factory (gemini-2.5-flash)
+**Agent:** Content Factory (gemini-3-flash-preview)
 
 **Output:**
 - 30-day GTM strategy (week-by-week)
@@ -93,7 +93,7 @@ Develops a comprehensive 30-day Go-to-Market strategy. Generates a social media 
 ### 5. Landing Page
 Generates a sitemap, high-conversion copy, a complete Next.js landing page component, and deploys it to a live URL with integrated lead capture and analytics hooks.
 
-**Agent:** Production Pipeline (gemini-2.5-flash)
+**Agent:** Production Pipeline (gemini-3-flash-preview)
 
 **Output:**
 - 5-page sitemap
@@ -108,7 +108,7 @@ Generates a sitemap, high-conversion copy, a complete Next.js landing page compo
 ### 6. Feasibility Study
 Produces a 20-page interactive feasibility study including financial projections, risk matrix with mitigation plans, market timing score, and a clear GO/NO-GO verdict.
 
-**Agent:** Deep Validation (gemini-2.5-flash + extended thinking)
+**Agent:** Deep Validation (gemini-3-flash-preview + extended thinking)
 
 **Output:**
 - 20-page study

@@ -8,6 +8,7 @@ import {
   type FormEvent,
 } from 'react'
 import { useParams } from 'next/navigation'
+import { motion } from 'framer-motion'
 import { AgentStatusRow } from '@/components/ui/AgentStatusRow'
 import { MessageStream } from '@/components/ui/MessageStream'
 import { ResultCard } from '@/components/ui/ResultCard'
@@ -148,21 +149,21 @@ export default function ModulePage() {
         const moduleConvos: ConversationEntry[] = (
           data.conversations?.[activeModule] ?? []
         ).map((c: {
-          conversationId: string
+          id: string
           prompt: string
-          streamOutput?: string[]
+          stream_output?: string[]
           result?: Record<string, unknown>
           status?: string
         }) => ({
-          conversationId: c.conversationId,
+          conversationId: c.id,
           prompt: c.prompt,
-          lines: c.streamOutput ?? [],
+          lines: c.stream_output ?? [],
           agentStatuses: buildCompletedStatuses(mod.accent),
           result: c.result && Object.keys(c.result).length > 0 ? c.result : null,
           isRunning: false,
           isError: c.status === 'failed',
         }))
-        setConversations(moduleConvos)
+        setConversations(moduleConvos.reverse())
       } finally {
         setHistoryLoaded(true)
       }
@@ -199,14 +200,6 @@ export default function ModulePage() {
     }
     setConversations(prev => [...prev, newEntry])
 
-    function updateEntry(patch: Partial<ConversationEntry> | ((e: ConversationEntry) => Partial<ConversationEntry>)) {
-      setConversations(prev => prev.map(c => {
-        if (c.conversationId !== entryId) return c
-        const delta = typeof patch === 'function' ? patch(c) : patch
-        return { ...c, ...delta }
-      }))
-    }
-
     try {
       // 1. POST to start run
       const runRes = await fetch(`/api/ventures/${ventureId}/run`, {
@@ -215,41 +208,50 @@ export default function ModulePage() {
         body: JSON.stringify({ moduleId: activeModule, prompt: text }),
       })
       if (!runRes.ok) throw new Error('Failed to start run')
-      const { conversationId } = await runRes.json()
+      const { conversationId: serverConversationId } = await runRes.json()
+
+      // Define updateEntry *after* we get the final conversationId so its closure captures it
+      function updateEntry(patch: Partial<ConversationEntry> | ((e: ConversationEntry) => Partial<ConversationEntry>)) {
+        setConversations(prev => prev.map(c => {
+          if (c.conversationId !== serverConversationId && c.conversationId !== entryId) return c
+          const delta = typeof patch === 'function' ? patch(c) : patch
+          return { ...c, ...delta }
+        }))
+      }
 
       // Update with real conversationId
       setConversations(prev => prev.map(c =>
-        c.conversationId === entryId ? { ...c, conversationId } : c
+        c.conversationId === entryId ? { ...c, conversationId: serverConversationId } : c
       ))
 
       // 2. Open SSE stream
-      const es = new EventSource(`/api/ventures/${ventureId}/stream/${conversationId}`)
+      const es = new EventSource(`/api/ventures/${ventureId}/stream/${serverConversationId}`)
 
-      es.addEventListener('line', (e: MessageEvent) => {
-        updateEntry(prev => ({ lines: [...prev.lines, e.data] }))
-      })
-
-      es.addEventListener('agent-status', (e: MessageEvent) => {
+      es.addEventListener('message', (e: MessageEvent) => {
         try {
-          const { agentKey, status, detail, durationMs } = JSON.parse(e.data)
-          updateEntry(prev => ({
-            agentStatuses: {
-              ...prev.agentStatuses,
-              [agentKey]: { status, detail: detail ?? prev.agentStatuses[agentKey]?.detail ?? '', durationMs },
-            },
-          }))
-        } catch { /* ignore parse errors */ }
-      })
-
-      es.addEventListener('complete', (e: MessageEvent) => {
-        try {
-          const result = JSON.parse(e.data)
-          updateEntry({ isRunning: false, result, agentStatuses: buildCompletedStatuses(mod.accent) })
-        } catch {
-          updateEntry({ isRunning: false })
+          const data = JSON.parse(e.data)
+          if (data.type === 'line') {
+            updateEntry(prev => ({ lines: [...prev.lines, data.content] }))
+          } else if (data.type === 'agent-status') {
+            const { agentId, status, detail, durationMs } = data
+            updateEntry(prev => ({
+              agentStatuses: {
+                ...prev.agentStatuses,
+                [agentId]: { status, detail: detail ?? prev.agentStatuses[agentId]?.detail ?? '', durationMs },
+              },
+            }))
+          } else if (data.type === 'complete') {
+            updateEntry({ isRunning: false, result: data.result, agentStatuses: buildCompletedStatuses(mod.accent) })
+            es.close()
+            setIsSubmitting(false)
+          } else if (data.type === 'error') {
+            updateEntry({ isRunning: false, isError: true })
+            es.close()
+            setIsSubmitting(false)
+          }
+        } catch (err) {
+          console.error("Error parsing SSE message:", err)
         }
-        es.close()
-        setIsSubmitting(false)
       })
 
       es.addEventListener('error', () => {
@@ -259,7 +261,10 @@ export default function ModulePage() {
       })
 
     } catch {
-      updateEntry({ isRunning: false, isError: true })
+       setConversations(prev => prev.map(c => {
+          if (c.conversationId !== entryId) return c
+          return { ...c, isRunning: false, isError: true }
+       }))
       setIsSubmitting(false)
     }
   }
@@ -308,14 +313,18 @@ export default function ModulePage() {
       {/* ── Chat area ── */}
       <div
         ref={chatAreaRef}
-        className="flex-1 overflow-y-auto"
-        style={{ paddingBottom: 100 }}
+        className="flex-1 overflow-y-auto w-full"
       >
         <div style={chatInnerStyle}>
 
           {/* Empty state */}
           {!hasMessages && historyLoaded && (
-            <div style={emptyStateStyle}>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              style={emptyStateStyle}
+            >
               <div style={{ color: mod.accent, marginBottom: 16 }}>
                 <ModuleIconSvg id={activeModule} size={32} />
               </div>
@@ -325,29 +334,54 @@ export default function ModulePage() {
               <p style={{ fontSize: 14, color: 'var(--muted)', margin: '0 0 24px', textAlign: 'center', maxWidth: 360 }}>
                 {mod.description}
               </p>
-              <div className="flex gap-2 flex-wrap justify-center">
+              <motion.div 
+                className="flex gap-2 flex-wrap justify-center"
+                initial="hidden"
+                animate="show"
+                variants={{
+                  hidden: { opacity: 0 },
+                  show: { opacity: 1, transition: { staggerChildren: 0.1 } }
+                }}
+              >
                 {suggestions.map(s => (
-                  <button
+                  <motion.button
                     key={s}
+                    variants={{
+                      hidden: { opacity: 0, y: 10 },
+                      show: { opacity: 1, y: 0 }
+                    }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => { setPrompt(s); textareaRef.current?.focus() }}
                     style={chipStyle(mod.accent)}
                   >
                     {s}
-                  </button>
+                  </motion.button>
                 ))}
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           )}
 
           {/* Conversations */}
           {conversations.map(entry => (
-            <div key={entry.conversationId} style={{ marginBottom: 32 }}>
+            <motion.div 
+              key={entry.conversationId} 
+              initial={{ opacity: 0, scale: 0.98, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              style={{ marginBottom: 32 }}
+            >
 
               {/* User message */}
               <div className="flex justify-end" style={{ marginBottom: 16 }}>
-                <div style={userBubbleStyle}>
+                <motion.div 
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: 0.1 }}
+                  style={userBubbleStyle}
+                >
                   {entry.prompt}
-                </div>
+                </motion.div>
               </div>
 
               {/* Agent response */}
@@ -406,7 +440,11 @@ export default function ModulePage() {
 
                 {/* Error state */}
                 {entry.isError && (
-                  <div style={errorBoxStyle}>
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    style={errorBoxStyle}
+                  >
                     <span style={{ fontSize: 13, color: '#dc2626' }}>Something went wrong.</span>
                     <button
                       onClick={() => retryEntry(entry)}
@@ -414,10 +452,10 @@ export default function ModulePage() {
                     >
                       Try Again
                     </button>
-                  </div>
+                  </motion.div>
                 )}
               </div>
-            </div>
+            </motion.div>
           ))}
 
           <div ref={chatEndRef} />
@@ -481,8 +519,10 @@ export default function ModulePage() {
               />
 
               {/* Send button (bottom-right) */}
-              <button
+              <motion.button
                 type="submit"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 disabled={!prompt.trim() || isSubmitting}
                 style={{
                   ...sendBtnStyle,
@@ -492,7 +532,7 @@ export default function ModulePage() {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="12" y1="19" x2="12" y2="5" /><polyline points="5 12 12 5 19 12" />
                 </svg>
-              </button>
+              </motion.button>
             </div>
 
             <p style={hintStyle}>⌘↵ to run · Shift↵ for new line</p>
@@ -564,7 +604,7 @@ function agentBadgeStyle(accent: string): React.CSSProperties {
 const chatInnerStyle: React.CSSProperties = {
   maxWidth: 660,
   margin: '0 auto',
-  padding: '32px 24px 0',
+  padding: '32px 24px 24px',
   width: '100%',
 }
 
@@ -595,10 +635,11 @@ const userBubbleStyle: React.CSSProperties = {
   maxWidth: '80%',
   fontSize: 14,
   color: 'var(--text)',
-  background: 'var(--accent-soft)',
-  border: '1px solid rgba(192,122,58,0.2)',
-  borderRadius: '18px 18px 4px 18px',
-  padding: '10px 16px',
+  background: 'var(--card)',
+  border: '1px solid var(--border)',
+  boxShadow: 'var(--shadow-subtle)',
+  borderRadius: '20px 20px 4px 20px',
+  padding: '12px 18px',
   lineHeight: 1.5,
 }
 
@@ -635,14 +676,14 @@ const retryBtnStyle: React.CSSProperties = {
 }
 
 const inputAreaStyle: React.CSSProperties = {
-  position: 'fixed',
-  bottom: 0,
-  left: 252, // sidebar width
-  right: 0,
-  background: 'var(--bg)',
-  borderTop: '1px solid var(--border)',
-  padding: '12px 24px 16px',
+  background: 'transparent',
+  padding: '16px 24px 24px',
+  flexShrink: 0,
   zIndex: 10,
+  position: 'absolute',
+  bottom: 0,
+  left: 0,
+  right: 0,
 }
 
 const inputInnerStyle: React.CSSProperties = {
@@ -651,13 +692,16 @@ const inputInnerStyle: React.CSSProperties = {
 }
 
 const inputWrapStyle: React.CSSProperties = {
-  background: 'var(--input-bg)',
-  border: '1px solid var(--border)',
-  borderRadius: 14,
-  padding: '10px 12px',
+  background: 'var(--glass-bg)',
+  backdropFilter: 'blur(16px)',
+  WebkitBackdropFilter: 'blur(16px)',
+  border: '1px solid var(--glass-border)',
+  boxShadow: 'var(--shadow-premium)',
+  borderRadius: 20,
+  padding: '12px 16px',
   display: 'flex',
   flexDirection: 'column',
-  gap: 8,
+  gap: 10,
   position: 'relative',
 }
 

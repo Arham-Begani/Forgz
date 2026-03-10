@@ -206,7 +206,7 @@ Output the full ContentOutput JSON at the end.`
         // Custom model config: higher temperature for creative copy, larger output for 90 posts
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
         const model = genAI.getGenerativeModel({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             generationConfig: {
                 temperature: 0.8,
                 topP: 0.95,

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { motion } from "framer-motion";
 
 export type ModuleId =
   | "research"
@@ -30,32 +31,58 @@ export function ResultCard({ moduleId, result, deploymentUrl }: ResultCardProps)
   const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 24, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.5, type: "spring", stiffness: 220, damping: 22 }}
+      whileHover={{ y: -3, boxShadow: `0 20px 40px -8px ${accent}28, 0 8px 16px -4px rgba(0,0,0,0.08)` }}
       style={{
-        background: "var(--card)",
-        border: "1px solid var(--border)",
-        borderRadius: "10px",
-        padding: "20px",
-        borderLeft: `3px solid ${accent}`,
+        background: "var(--glass-bg)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        border: "1px solid var(--glass-border)",
+        borderTop: `2px solid ${accent}`,
+        borderRadius: "16px",
+        padding: "22px",
         display: "flex",
         flexDirection: "column",
         gap: "20px",
+        boxShadow: "var(--shadow-subtle)",
+        overflow: "hidden",
+        position: "relative",
       }}
     >
+      {/* Subtle background glow tint */}
+      <div style={{
+        position: "absolute",
+        top: 0, left: 0, right: 0,
+        height: "60px",
+        background: `linear-gradient(to bottom, ${accent}0d, transparent)`,
+        pointerEvents: "none",
+        zIndex: 0,
+      }} />
+
       {/* Header row */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", color: accent, fontSize: "14px", fontWeight: 600 }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-            <polyline points="22 4 12 14.01 9 11.01" />
-          </svg>
-          Complete
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative", zIndex: 1 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", color: accent, fontSize: "13px", fontWeight: 600, letterSpacing: "0.01em" }}>
+          <div style={{
+            width: 22, height: 22,
+            borderRadius: "50%",
+            background: `${accent}20`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+          </div>
+          Analysis Complete
         </div>
-        <div style={{ fontSize: "12px", color: "var(--muted)" }}>{now}</div>
+        <div style={{ fontSize: "11px", color: "var(--muted)", letterSpacing: "0.02em" }}>{now}</div>
       </div>
 
       {/* Content */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "14px", position: "relative", zIndex: 1 }}>
         {moduleId === "research" && <ResearchDisplay result={result} />}
         {moduleId === "branding" && <BrandingDisplay result={result} />}
         {moduleId === "marketing" && <MarketingDisplay result={result} />}
@@ -65,60 +92,73 @@ export function ResultCard({ moduleId, result, deploymentUrl }: ResultCardProps)
       </div>
 
       {/* Action buttons row */}
-      <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
-        <button
+      <div style={{ display: "flex", gap: "8px", marginTop: "4px", position: "relative", zIndex: 1 }}>
+        <motion.button
+          whileHover={{ scale: 1.04, backgroundColor: "var(--nav-active)" }}
+          whileTap={{ scale: 0.96 }}
           style={{
-            padding: "8px 16px",
+            padding: "7px 14px",
             background: "transparent",
             border: "1px solid var(--border)",
-            borderRadius: "6px",
-            color: "var(--text-soft)",
-            fontSize: "13px",
+            borderRadius: "8px",
+            color: "var(--muted)",
+            fontSize: "12px",
             fontWeight: 500,
             cursor: "pointer",
+            fontFamily: "inherit",
+            transition: "background 200ms",
           }}
         >
           Export PDF
-        </button>
-        <button
+        </motion.button>
+        <motion.button
+          whileHover={{ scale: 1.04, backgroundColor: "var(--nav-active)" }}
+          whileTap={{ scale: 0.96 }}
           style={{
-            padding: "8px 16px",
+            padding: "7px 14px",
             background: "transparent",
             border: "1px solid var(--border)",
-            borderRadius: "6px",
+            borderRadius: "8px",
             color: "var(--text)",
-            fontSize: "13px",
+            fontSize: "12px",
             fontWeight: 500,
             cursor: "pointer",
+            fontFamily: "inherit",
+            transition: "background 200ms",
           }}
         >
           Share
-        </button>
+        </motion.button>
         {deploymentUrl && (
-          <a
+          <motion.a
+            whileHover={{ scale: 1.04, opacity: 0.9 }}
+            whileTap={{ scale: 0.96 }}
             href={deploymentUrl}
             target="_blank"
             rel="noopener noreferrer"
             style={{
               marginLeft: "auto",
-              padding: "8px 16px",
+              padding: "7px 16px",
               background: accent,
               border: "none",
-              borderRadius: "6px",
+              borderRadius: "8px",
               color: "#fff",
-              fontSize: "13px",
-              fontWeight: 500,
+              fontSize: "12px",
+              fontWeight: 600,
               cursor: "pointer",
               textDecoration: "none",
               display: "flex",
               alignItems: "center",
+              gap: "4px",
+              letterSpacing: "0.01em",
+              boxShadow: `0 4px 12px ${accent}40`,
             }}
           >
-            View Live Site &rarr;
-          </a>
+            View Live Site →
+          </motion.a>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
 

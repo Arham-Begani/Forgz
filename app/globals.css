@@ -17,6 +17,12 @@
   --input-bg: #ffffff;
   --stream-bg: #f8f6f1;
   --stream-text: #78716c;
+
+  /* Premium Additions */
+  --shadow-premium: 0 20px 40px -10px rgba(0,0,0,0.06), 0 10px 20px -5px rgba(0,0,0,0.04);
+  --shadow-subtle: 0 4px 12px rgba(0,0,0,0.03);
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.5);
 }
 
 .dark {
@@ -33,6 +39,12 @@
   --input-bg: #161513;
   --stream-bg: #0f0e0c;
   --stream-text: #57534e;
+
+  /* Premium Additions */
+  --shadow-premium: 0 20px 40px -10px rgba(0,0,0,0.4), 0 10px 20px -5px rgba(0,0,0,0.3);
+  --shadow-subtle: 0 4px 12px rgba(0,0,0,0.2);
+  --glass-bg: rgba(26, 25, 23, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.05);
 }
 
 * {
@@ -44,4 +56,60 @@ body {
   color: var(--text);
   font-family: 'DM Sans', sans-serif;
   margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+/* Glassmorphism utility */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+}
+
+/* Shimmer animation for skeleton loaders */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--border) 25%, var(--nav-active) 50%, var(--border) 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.6s infinite linear;
+  border-radius: 6px;
+}
+
+/* Subtle pulse for loading states */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+/* Premium scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* Text selection */
+::selection {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* Smooth transitions for all interactive elements */
+button, a {
+  transition: opacity 150ms, transform 150ms;
+}

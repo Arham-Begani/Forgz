@@ -8,7 +8,7 @@ This file is the Agent's memory between sessions.
 ---
 
 ## Current Status
-**Phase:** 7 — Wire Agents to API
+**Phase:** 9 — Design QA
 **Last updated:** March 10, 2026
 
 ---
@@ -47,7 +47,7 @@ This file is the Agent's memory between sessions.
 - [x] `components/ui/ResultCard.tsx`
 - [x] `components/ui/AgentStatusRow.tsx`
 - [x] Light/dark mode working
-- [ ] Venture creation + sidebar expand working
+- [x] Venture creation + sidebar expand working
 
 ### Phase 4 — API Routes
 - [x] `GET /api/ventures` — list ventures
@@ -70,13 +70,13 @@ This file is the Agent's memory between sessions.
 - [x] `.claude/skills/deep-validation/SKILL.md`
 
 ### Phase 6 — Agents
-- [x] `lib/gemini.ts` — Gemini SDK wrapper (Optimized for 2.5)
-- [x] `agents/genesis.ts` — built and tested (Gemini 2.5 Flash)
-- [x] `agents/identity.ts` — built and tested (Gemini 2.5 Flash)
-- [x] `agents/content.ts` — built and tested (Gemini 2.5 Flash)
-- [x] `agents/pipeline.ts` — built and tested (Gemini 2.5 Flash)
-- [x] `agents/feasibility.ts` — built and tested (Gemini 2.5 Flash + Thinking)
-- [x] `agents/orchestrator.ts` — Full Launch lead (Gemini 2.5 Pro)
+- [x] `lib/gemini.ts` — Gemini SDK wrapper
+- [x] `agents/genesis.ts` — built and tested
+- [x] `agents/identity.ts` — built and tested
+- [x] `agents/content.ts` — built and tested
+- [x] `agents/pipeline.ts` — built and tested
+- [x] `agents/feasibility.ts` — built and tested
+- [x] `agents/orchestrator.ts` — Full Launch lead
 - [x] Integration tests for all models passing
 
 ### Phase 7 — Wire Agents to API
@@ -91,10 +91,16 @@ This file is the Agent's memory between sessions.
 - [x] MessageStream component renders lines in real time
 - [x] AgentStatusRow updates for Full Launch
 - [x] ResultCard renders on completion
-- [x] Sidebar updates after run completes (Verified venture context flow)
+- [x] Sidebar updates after run completes
 - [x] Past conversations load correctly
 
 ### Phase 9 — Design QA
+- [x] Major UI overhaul: `layout.tsx`, `page.tsx`, `app/globals.css` refined
+- [x] `MessageStream.tsx` — improved rendering and styling
+- [x] `AgentStatusRow.tsx` — updated status indicator styles
+- [x] `ModulePicker.tsx` — polished dropdown and pill UI
+- [x] `ResultCard.tsx` — improved result display layout
+- [x] `app/dashboard/venture/[id]/[module]/page.tsx` — refactored workspace view
 - [ ] web-design-guidelines audit run on all components
 - [ ] frontend-design skill review complete
 - [ ] All findings resolved
@@ -126,10 +132,10 @@ This file is the Agent's memory between sessions.
 - Orchestrated agent team setup in `.claude/skills/`.
 - Implemented `lib/gemini.ts` with streaming and schema support.
 - Built full Silicon Workforce: `genesis`, `identity`, `content`, `pipeline`, `feasibility`, `orchestrator`.
-- Verified 2.5 Pro/Flash model stability via integration tests.
-- Reverted configuration from 3.0 to 2.5 for stability as requested.
+- Verified model stability via integration tests.
 - **Wired Agents to API:** Implemented `/run` and `/stream` SSE endpoints.
 - **Wired UI to API:** Integrated real-time streaming, status updates, and result cards into the dashboard.
+- **Design QA Pass:** Major overhaul of `layout.tsx`, `page.tsx`, `globals.css`, and all UI components (`MessageStream`, `AgentStatusRow`, `ModulePicker`, `ResultCard`). Sidebar expand and venture creation working.
 **Broken:** None.
-**Commits:** Core foundation, agents, and API/UI wiring.
-**Tomorrow:** Phase 9 — Design QA and web-design-guidelines audit.
+**Commits:** Core foundation → agents → API/UI wiring → Design QA.
+**Tomorrow:** Complete Phase 9 design audit, then Phase 10 Polish.

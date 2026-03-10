@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, type ReactNode, type KeyboardEvent } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-
+import { motion, AnimatePresence } from 'framer-motion'
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
 interface SessionData {
@@ -170,50 +170,73 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
-      <aside style={sidebarStyle}>
+      <aside style={{ ...sidebarStyle, ...glassSidebarStyle }}>
         {/* Header: Logo + Dark toggle */}
         <div style={headerStyle}>
           <div className="flex items-center gap-2">
             {/* Hexagon via clip-path */}
-            <div style={hexStyle} />
+            <motion.div 
+              style={hexStyle} 
+              animate={{ rotate: 360 }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            />
             <span style={wordmarkStyle}>Forge</span>
           </div>
-          <button onClick={toggleDark} style={toggleBtnStyle} aria-label="Toggle dark mode">
-            {dark ? (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="5" />
-                <line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
-                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
-                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-              </svg>
-            ) : (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-              </svg>
-            )}
-          </button>
+            <motion.button 
+              onClick={toggleDark} 
+              style={toggleBtnStyle} 
+              aria-label="Toggle dark mode"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              {dark ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="5" />
+                  <line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                  <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                </svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+              )}
+            </motion.button>
         </div>
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto" style={{ padding: '16px 12px' }}>
           {/* New Venture button / input */}
-          {showNewInput ? (
-            <input
-              ref={newInputRef}
-              value={newName}
-              onChange={e => setNewName(e.target.value)}
-              onKeyDown={handleNewKeyDown}
-              onBlur={() => submitNewVenture()}
-              placeholder="Venture name..."
-              style={newInputStyle}
-            />
-          ) : (
-            <button onClick={() => setShowNewInput(true)} style={newBtnStyle}>
-              <span style={{ fontSize: 15, lineHeight: 1 }}>+</span>
-              <span>New Venture</span>
-            </button>
-          )}
+          <AnimatePresence mode="wait">
+            {showNewInput ? (
+              <motion.input
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                ref={newInputRef}
+                value={newName}
+                onChange={e => setNewName(e.target.value)}
+                onKeyDown={handleNewKeyDown}
+                onBlur={() => submitNewVenture()}
+                placeholder="Venture name..."
+                style={newInputStyle}
+              />
+            ) : (
+              <motion.button 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                whileHover={{ scale: 1.02, backgroundColor: 'var(--nav-active)' }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setShowNewInput(true)} 
+                style={newBtnStyle}
+              >
+                <span style={{ fontSize: 16, fontWeight: 300, lineHeight: 1 }}>+</span>
+                <span>New Venture</span>
+              </motion.button>
+            )}
+          </AnimatePresence>
 
           {/* VENTURES label */}
           <p style={sectionLabelStyle}>VENTURES</p>
@@ -237,11 +260,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 return (
                   <div key={v.id} className="flex flex-col">
                     {/* Venture row */}
-                    <button
+                    <motion.button
                       onClick={() => toggleExpand(v.id)}
+                      whileHover={{ backgroundColor: 'var(--nav-active)' }}
+                      transition={{ duration: 0.15 }}
                       style={{
                         ...ventureRowStyle,
-                        opacity: isOpen ? 1 : 0.7,
+                        opacity: isOpen ? 1 : 0.8,
                       }}
                     >
                       {/* Chevron */}
@@ -256,7 +281,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                         strokeLinejoin="round"
                         style={{
                           transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)',
-                          transition: 'transform 200ms ease',
+                          transition: 'transform 200ms cubic-bezier(0.4, 0, 0.2, 1)',
                           flexShrink: 0,
                         }}
                       >
@@ -264,32 +289,43 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                       </svg>
                       <span style={ventureNameStyle}>{v.name}</span>
                       <span style={ventureDateStyle}>{formatDate(v.created_at)}</span>
-                    </button>
+                    </motion.button>
 
                     {/* Module sub-rows */}
-                    {isOpen && (
-                      <div style={moduleContainerStyle}>
-                        {MODULES.map(m => {
-                          const active = isModuleActive(v.id, m.id)
-                          return (
-                            <button
-                              key={m.id}
-                              onClick={() => router.push(`/dashboard/venture/${v.id}/${m.id}`)}
-                              style={{
-                                ...moduleRowStyle,
-                                background: active ? 'var(--nav-active)' : 'transparent',
-                                borderLeft: active ? `3px solid ${m.accent}` : '3px solid transparent',
-                              }}
-                            >
-                              <span style={{ color: m.accent, fontSize: 14, lineHeight: 1, width: 16, textAlign: 'center' }}>
-                                {m.icon}
-                              </span>
-                              <span style={moduleLabelStyle}>{m.label}</span>
-                            </button>
-                          )
-                        })}
-                      </div>
-                    )}
+                    <AnimatePresence>
+                      {isOpen && (
+                        <motion.div 
+                          style={moduleContainerStyle}
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2, ease: "easeInOut" }}
+                        >
+                          {MODULES.map(m => {
+                            const active = isModuleActive(v.id, m.id)
+                            return (
+                              <motion.button
+                                key={m.id}
+                                whileHover={{ backgroundColor: active ? 'var(--nav-active)' : 'var(--border)' }}
+                                onClick={() => router.push(`/dashboard/venture/${v.id}/${m.id}`)}
+                                style={{
+                                  ...moduleRowStyle,
+                                  background: active ? 'var(--nav-active)' : 'transparent',
+                                  borderLeft: active ? `3px solid ${m.accent}` : '3px solid transparent',
+                                }}
+                              >
+                                <span style={{ color: m.accent, fontSize: 14, lineHeight: 1, width: 16, textAlign: 'center' }}>
+                                  {m.icon}
+                                </span>
+                                <span style={{...moduleLabelStyle, color: active ? 'var(--text)' : 'var(--text-soft)'}}>
+                                  {m.label}
+                                </span>
+                              </motion.button>
+                            )
+                          })}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 )
               })}
@@ -311,7 +347,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               </span>
             </div>
             {/* Settings gear */}
-            <button
+            <motion.button
+              whileHover={{ rotate: 90, scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              transition={{ type: "spring", stiffness: 200, damping: 10 }}
               onClick={() => router.push('/dashboard/settings')}
               aria-label="Settings"
               style={gearBtnStyle}
@@ -320,7 +359,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <circle cx="12" cy="12" r="3" />
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
               </svg>
-            </button>
+            </motion.button>
           </div>
         </div>
       </aside>
@@ -343,6 +382,13 @@ const sidebarStyle: React.CSSProperties = {
   background: 'var(--sidebar)',
   borderRight: '1px solid var(--border)',
   flexShrink: 0,
+  zIndex: 10,
+}
+
+const glassSidebarStyle: React.CSSProperties = {
+  background: 'var(--glass-bg)',
+  backdropFilter: 'blur(16px)',
+  WebkitBackdropFilter: 'blur(16px)',
 }
 
 const headerStyle: React.CSSProperties = {
@@ -390,10 +436,11 @@ const newBtnStyle: React.CSSProperties = {
   height: 32,
   borderRadius: 8,
   border: '1px solid var(--border)',
-  background: 'transparent',
+  background: 'var(--card)',
+  boxShadow: 'var(--shadow-subtle)',
   color: 'var(--text)',
-  fontSize: 12,
-  fontWeight: 500,
+  fontSize: 13,
+  fontWeight: 600,
   fontFamily: 'inherit',
   cursor: 'pointer',
   marginBottom: 0,
@@ -404,12 +451,13 @@ const newInputStyle: React.CSSProperties = {
   height: 32,
   borderRadius: 8,
   border: '1px solid var(--accent)',
-  background: 'var(--input-bg)',
+  background: 'var(--card)',
   color: 'var(--text)',
-  fontSize: 12,
+  fontSize: 13,
   fontFamily: 'inherit',
-  padding: '0 10px',
+  padding: '0 12px',
   outline: 'none',
+  boxShadow: 'var(--shadow-subtle)',
 }
 
 const sectionLabelStyle: React.CSSProperties = {
@@ -469,11 +517,12 @@ const ventureDateStyle: React.CSSProperties = {
 const moduleContainerStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: 1,
+  gap: 2,
   marginLeft: 18,
-  marginTop: 2,
+  marginTop: 4,
   paddingLeft: 10,
   borderLeft: '1px solid var(--border)',
+  overflow: 'hidden',
 }
 
 const moduleRowStyle: React.CSSProperties = {

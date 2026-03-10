@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -119,20 +120,48 @@ export default function DashboardPage() {
   // ── Empty state ─────────────────────────────────────────────────────────────
   if (!ventures.length) {
     return (
-      <div style={centerStyle}>
-        <div style={emptyHexStyle} />
-        <h1 style={emptyHeadingStyle}>Your ventures live here</h1>
-        <p style={emptySubStyle}>Create your first venture to get started</p>
-        <button
+      <motion.div 
+        style={centerStyle}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+      >
+        <motion.div 
+          style={emptyHexStyle} 
+          animate={{ rotate: 360 }}
+          transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+        />
+        <motion.h1 
+          style={emptyHeadingStyle}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          Your ventures live here
+        </motion.h1>
+        <motion.p 
+          style={emptySubStyle}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          Create your first venture to get started
+        </motion.p>
+        <motion.button
           style={createBtnStyle}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
           onClick={() => {
             // Dispatch a custom event the sidebar listens to
             window.dispatchEvent(new CustomEvent('forge:new-venture'))
           }}
         >
           Create Venture
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
     )
   }
 
@@ -141,31 +170,92 @@ export default function DashboardPage() {
     <div style={pageStyle}>
       <div style={contentStyle}>
         {/* Hero */}
-        <div style={heroStyle}>
-          <div style={heroHexStyle} />
+        <motion.div 
+          style={heroStyle}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+        >
+          {/* Dual-layer ambient glow */}
+          <div style={{ position: 'relative', marginBottom: 24 }}>
+            <motion.div 
+              style={{
+                position: 'absolute',
+                top: '50%', left: '50%',
+                width: 160, height: 160,
+                background: 'radial-gradient(circle, var(--accent) 0%, transparent 70%)',
+                filter: 'blur(30px)',
+                opacity: 0.18,
+                transform: 'translate(-50%, -50%)',
+                zIndex: 0,
+                borderRadius: '50%',
+              }}
+              animate={{ scale: [1, 1.3, 1], opacity: [0.18, 0.28, 0.18] }}
+              transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <motion.div
+              style={{
+                position: 'absolute',
+                top: '50%', left: '50%',
+                width: 70, height: 70,
+                background: 'var(--accent)',
+                filter: 'blur(20px)',
+                opacity: 0.3,
+                transform: 'translate(-50%, -50%)',
+                zIndex: 0,
+                borderRadius: '50%',
+              }}
+              animate={{ scale: [1, 1.5, 1] }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+            />
+            <motion.div 
+              style={{...heroHexStyle, position: 'relative', zIndex: 1}} 
+              animate={{ rotate: 360 }}
+              transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+            />
+          </div>
           <h1 style={heroHeadingStyle}>{selectedVenture?.name ?? 'Select a venture'}</h1>
           <p style={heroSubStyle}>
             Your venture is ready for orchestration. Select a module below to activate the Genesis Engine.
           </p>
-        </div>
+        </motion.div>
 
         {/* Module grid */}
-        <div style={gridStyle}>
+        <motion.div 
+          style={gridStyle}
+          initial="hidden"
+          animate="show"
+          variants={{
+            hidden: { opacity: 0 },
+            show: {
+              opacity: 1,
+              transition: { staggerChildren: 0.08 }
+            }
+          }}
+        >
           {MODULES.map(m => {
             const isHovered = hovered === m.id
             return (
-              <button
+              <motion.button
                 key={m.id}
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
+                }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => selectedVenture && router.push(`/dashboard/venture/${selectedVenture.id}/${m.id}`)}
                 onMouseEnter={() => setHovered(m.id)}
                 onMouseLeave={() => setHovered(null)}
                 style={{
                   ...cardStyle,
                   borderColor: isHovered ? m.accent : 'var(--border)',
-                  transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
                   boxShadow: isHovered
-                    ? '0 12px 24px -6px rgba(44,43,41,0.12), 0 4px 8px -2px rgba(44,43,41,0.06)'
-                    : '0 2px 8px -2px rgba(44,43,41,0.08), 0 1px 2px rgba(44,43,41,0.04)',
+                    ? 'var(--shadow-premium)'
+                    : 'var(--shadow-subtle)',
+                  background: isHovered 
+                    ? `linear-gradient(to bottom right, var(--card), ${m.accent}0a)` 
+                    : 'var(--card)',
                 }}
               >
                 {/* Left accent bar */}
@@ -196,10 +286,10 @@ export default function DashboardPage() {
                   </span>
                   <span style={cardDescStyle}>{m.description}</span>
                 </div>
-              </button>
+              </motion.button>
             )
           })}
-        </div>
+        </motion.div>
 
         {/* Footer */}
         <p style={footerStyle}>Forge Autonomous Orchestrator · v1.0.0</p>
@@ -222,8 +312,8 @@ const centerStyle: React.CSSProperties = {
 }
 
 const skeletonHexStyle: React.CSSProperties = {
-  width: 40,
-  height: 40,
+  width: 48,
+  height: 48,
   background: 'var(--border)',
   clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
   animation: 'pulse 1.5s ease-in-out infinite',
@@ -287,12 +377,13 @@ const heroStyle: React.CSSProperties = {
 }
 
 const heroHexStyle: React.CSSProperties = {
-  width: 40,
-  height: 40,
+  width: 48,
+  height: 48,
   background: 'var(--accent)',
   clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
   marginBottom: 20,
-  opacity: 0.8,
+  opacity: 0.9,
+  boxShadow: '0 0 20px var(--accent-soft)',
 }
 
 const heroHeadingStyle: React.CSSProperties = {
@@ -304,9 +395,9 @@ const heroHeadingStyle: React.CSSProperties = {
 }
 
 const heroSubStyle: React.CSSProperties = {
-  fontSize: 14,
+  fontSize: 15,
   color: 'var(--muted)',
-  maxWidth: 400,
+  maxWidth: 420,
   lineHeight: 1.6,
   margin: 0,
 }
@@ -321,16 +412,18 @@ const cardStyle: React.CSSProperties = {
   position: 'relative',
   display: 'flex',
   flexDirection: 'column',
-  height: 148,
-  padding: 18,
-  borderRadius: 12,
+  height: 158,
+  padding: 20,
+  borderRadius: 16,
   border: '1px solid var(--border)',
   background: 'var(--card)',
+  backdropFilter: 'blur(8px)',
+  WebkitBackdropFilter: 'blur(8px)',
   cursor: 'pointer',
   textAlign: 'left',
   fontFamily: 'inherit',
   overflow: 'hidden',
-  transition: 'border-color 200ms, transform 200ms, box-shadow 200ms',
+  transition: 'border-color 250ms ease, transform 250ms ease, box-shadow 300ms ease, background 300ms ease',
 }
 
 const cardAccentBar: React.CSSProperties = {
@@ -339,32 +432,34 @@ const cardAccentBar: React.CSSProperties = {
   left: 0,
   width: 3,
   bottom: 0,
-  borderRadius: '0 0 0 0',
-  transition: 'opacity 200ms',
+  borderRadius: '16px 0 0 16px',
+  transition: 'opacity 250ms ease',
 }
 
 const iconWrapStyle: React.CSSProperties = {
-  width: 40,
-  height: 40,
-  borderRadius: 8,
+  width: 42,
+  height: 42,
+  borderRadius: 10,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   marginBottom: 'auto',
   flexShrink: 0,
+  transition: 'background 250ms ease, color 250ms ease, box-shadow 250ms ease',
 }
 
 const cardTextStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: 3,
-  marginTop: 12,
+  gap: 4,
+  marginTop: 14,
 }
 
 const cardNameStyle: React.CSSProperties = {
   fontSize: 14,
   fontWeight: 700,
   letterSpacing: '-0.01em',
+  transition: 'color 250ms ease',
 }
 
 const cardDescStyle: React.CSSProperties = {

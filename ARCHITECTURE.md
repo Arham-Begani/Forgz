@@ -22,13 +22,13 @@
 
 | Module | Model | Features |
 |--------|-------|----------|
-| Full Launch (Architect) | gemini-2.5-pro | Agent Teams + extended thinking (10k tokens) |
-| Research | gemini-2.5-flash | web_search tool enabled |
-| Branding | gemini-2.5-flash | Structured JSON output + Zod validation |
-| Marketing | gemini-2.5-flash | Brand context injection + structured output |
-| Landing Page | gemini-2.5-flash | Code generation + Antigravity deploy hooks |
-| Feasibility | gemini-2.5-flash | Extended thinking (8k tokens) |
-| Formatting/cleanup | gemini-2.5-flash | Mechanical tasks only |
+| Full Launch (Architect) | gemini-3-pro | Agent Teams + extended thinking (10k tokens) |
+| Research | gemini-3-flash-preview | web_search tool enabled |
+| Branding | gemini-3-flash-preview | Structured JSON output + Zod validation |
+| Marketing | gemini-3-flash-preview | Brand context injection + structured output |
+| Landing Page | gemini-3-flash-preview | Code generation + Antigravity deploy hooks |
+| Feasibility | gemini-3-flash-preview | Extended thinking (8k tokens) |
+| Formatting/cleanup | gemini-3-flash-preview | Mechanical tasks only |
 
 All models use prompt caching on system prompts.
 

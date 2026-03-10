@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export type ModuleId =
   | "full-launch"
@@ -51,54 +52,124 @@ export function ModulePicker({ selectedModule, onChange }: ModulePickerProps) {
   return (
     <div ref={containerRef} className="relative inline-block">
       {/* Dropdown panel */}
-      {isOpen && (
-        <div className="absolute bottom-[calc(100%+8px)] left-0 bg-[var(--card)] border border-[var(--border)] rounded-xl p-1 w-[320px] shadow-lg z-50 flex flex-col gap-0.5">
-          {Object.values(MODULES).map((mod) => {
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            initial={{ opacity: 0, y: -8, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.97 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            style={{
+              position: "absolute",
+              bottom: "calc(100% + 10px)",
+              left: 0,
+              background: "var(--glass-bg)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+              border: "1px solid var(--glass-border)",
+              boxShadow: "var(--shadow-premium)",
+              borderRadius: 16,
+              padding: "6px",
+              width: 300,
+              zIndex: 50,
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+            }}
+          >
+            {Object.values(MODULES).map((mod) => {
             const isSelected = mod.id === selectedModule;
             return (
-              <button
+              <motion.button
                 key={mod.id}
+                whileHover={{ backgroundColor: isSelected ? undefined : "var(--nav-active)" }}
                 onClick={() => {
                   onChange(mod.id);
                   setIsOpen(false);
                 }}
-                className={`flex items-center justify-between px-3 py-2.5 rounded-lg border-none cursor-pointer text-left w-full transition-colors ${isSelected ? "bg-[var(--nav-active)]" : "bg-transparent hover:bg-black/5 dark:hover:bg-white/5"
-                  }`}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "9px 10px",
+                  borderRadius: 10,
+                  border: "none",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  width: "100%",
+                  fontFamily: "inherit",
+                  background: isSelected ? `${mod.accent}14` : "transparent",
+                  transition: "background 150ms",
+                }}
               >
-                <div className="flex items-center gap-3">
-                  <span style={{ color: mod.accent }} className="text-sm flex items-center justify-center w-4 text-center">
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{
+                    width: 28, height: 28,
+                    borderRadius: 8,
+                    background: `${mod.accent}20`,
+                    color: mod.accent,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 12,
+                    flexShrink: 0,
+                  }}>
                     {mod.icon}
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: isSelected ? 600 : 500, color: isSelected ? mod.accent : "var(--text)" }}>
+                    {mod.label}
                   </span>
-                  <span className="text-[13px] font-medium text-[var(--text)]">{mod.label}</span>
                 </div>
-                <span className="text-[11px] text-[var(--muted)] whitespace-nowrap overflow-hidden text-ellipsis ml-4 text-right">
+                <span style={{ fontSize: 11, color: "var(--muted)", maxWidth: 100, textAlign: "right", lineHeight: 1.3 }}>
                   {mod.description}
                 </span>
-              </button>
+              </motion.button>
             );
           })}
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Pill */}
-      <button
+      <motion.button
         type="button"
+        whileHover={{ scale: 1.04, opacity: 0.9 }}
+        whileTap={{ scale: 0.96 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-full cursor-pointer outline-none transition-opacity hover:opacity-80"
         style={{
-          background: `${currentModule.accent}26`, // 15% opacity
-          border: `1px solid ${currentModule.accent}4D`, // 30% opacity
-          color: currentModule.accent,
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          padding: "6px 12px 6px 8px",
+          borderRadius: 20,
+          cursor: "pointer",
+          outline: "none",
           fontFamily: "'DM Sans', sans-serif",
-          fontSize: "12px",
-          fontWeight: 500,
+          fontSize: 12,
+          fontWeight: 600,
+          background: `${currentModule.accent}20`,
+          border: `1px solid ${currentModule.accent}40`,
+          color: currentModule.accent,
+          boxShadow: `0 0 12px ${currentModule.accent}18, inset 0 0 0 1px ${currentModule.accent}10`,
+          transition: "box-shadow 200ms, background 200ms",
+          letterSpacing: "0.01em",
         }}
       >
-        <span className="text-[13px] flex items-center justify-center translate-y-[0.5px]">
+        <div style={{
+          width: 22, height: 22,
+          borderRadius: 6,
+          background: `${currentModule.accent}28`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 11,
+        }}>
           {currentModule.icon}
-        </span>
+        </div>
         <span>{currentModule.label}</span>
-      </button>
+        <svg
+          width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor"
+          style={{ opacity: 0.6, transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 200ms" }}
+        >
+          <path d="M2 3.5L5 6.5L8 3.5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </motion.button>
     </div>
   );
 }
