@@ -47,13 +47,13 @@ Read PRD.md for the full product vision before starting any task.
 
 | Module | Model | Special Features |
 |--------|-------|-----------------|
-| Full Launch Architect | gemini-3.0-pro | Agent Teams + extended thinking (10k) |
-| Research | gemini-3.0-flash | web_search tool enabled |
-| Branding | gemini-3.0-flash | Structured JSON + Zod validation |
-| Marketing | gemini-3.0-flash | Brand context injection |
-| Landing Page | gemini-3.0-flash | Code generation + deploy hooks |
-| Feasibility | gemini-3.0-flash | Extended thinking (8k tokens) |
-| Cleanup/formatting | gemini-3.0-flash | Mechanical tasks only |
+| Full Launch Architect | gemini-2.5-pro | Agent Teams + extended thinking (10k) |
+| Research | gemini-2.5-flash | web_search tool enabled |
+| Branding | gemini-2.5-flash | Structured JSON + Zod validation |
+| Marketing | gemini-2.5-flash | Brand context injection |
+| Landing Page | gemini-2.5-flash | Code generation + deploy hooks |
+| Feasibility | gemini-2.5-flash | Extended thinking (8k tokens) |
+| Cleanup/formatting | gemini-2.5-flash | Mechanical tasks only |
 
 All agents: prompt caching enabled on system prompts.
 
