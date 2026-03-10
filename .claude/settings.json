@@ -1,6 +1,6 @@
 {
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
-    "model": "claude-opus-4-6",
+    "model": "gemini-2.5-pro",
     "thinking": {
         "type": "enabled",
         "budget_tokens": 10000
