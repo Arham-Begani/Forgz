@@ -21,7 +21,7 @@ async function runAgent(
     prompt: string,
     userId: string
 ) {
-    // TODO Phase 11 — wire agents here
+    // TODO: Wire Gemini agents here
     // For now: simulate a 2-second delay then mark complete
     await new Promise(r => setTimeout(r, 2000))
     await appendStreamLine(conversationId, 'Agent wiring coming in Phase 11...')
