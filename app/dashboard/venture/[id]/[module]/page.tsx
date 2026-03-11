@@ -1121,6 +1121,7 @@ function DocList({ items }: { items: any[] }) {
 }
 
 function ResearchDoc({ result }: { result: Record<string, any> }) {
+  if (!result) return <div style={{ color: 'var(--muted)', fontSize: 12 }}>No result data available yet.</div>
   const r = result.research || result
   const tam = r.tam?.value || (typeof r.tam === 'string' ? r.tam : r.tam ? JSON.stringify(r.tam) : '')
   const sam = r.sam?.value || (typeof r.sam === 'string' ? r.sam : '')
@@ -1191,6 +1192,7 @@ function ResearchDoc({ result }: { result: Record<string, any> }) {
 }
 
 function BrandingDoc({ result }: { result: Record<string, any> }) {
+  if (!result) return <div style={{ color: 'var(--muted)', fontSize: 12 }}>No result data available yet.</div>
   const b = result.branding || result
   const colors = Array.isArray(b.colorPalette) ? b.colorPalette : (typeof b.colorPalette === 'object' && b.colorPalette ? Object.entries(b.colorPalette) : [])
 
@@ -1246,6 +1248,7 @@ function BrandingDoc({ result }: { result: Record<string, any> }) {
 }
 
 function MarketingDoc({ result }: { result: Record<string, any> }) {
+  if (!result) return <div style={{ color: 'var(--muted)', fontSize: 12 }}>No result data available yet.</div>
   const m = result.marketing || result
   const gtm = m.gtmStrategy || m
   const socialPosts = Array.isArray(m.socialCalendar) ? m.socialCalendar : []
@@ -1353,6 +1356,7 @@ function MarketingDoc({ result }: { result: Record<string, any> }) {
 }
 
 function LandingDoc({ result }: { result: Record<string, any> }) {
+  if (!result) return <div style={{ color: 'var(--muted)', fontSize: 12 }}>No result data available yet.</div>
   const l = result.landing || result
   const copy = l.landingPageCopy || l.copy || {}
   const heroHeadline = copy.hero?.headline || l.heroHeadline || l.headline
@@ -1407,6 +1411,7 @@ function LandingDoc({ result }: { result: Record<string, any> }) {
 }
 
 function FeasibilityDoc({ result }: { result: Record<string, any> }) {
+  if (!result) return <div style={{ color: 'var(--muted)', fontSize: 12 }}>No result data available yet.</div>
   const f = result.feasibility || result
   const fm = f.financialModel || {}
   const risks = Array.isArray(f.riskMatrix || f.risks) ? (f.riskMatrix || f.risks) : []
@@ -1479,6 +1484,7 @@ function FeasibilityDoc({ result }: { result: Record<string, any> }) {
 }
 
 function FullLaunchDoc({ result, accent }: { result: Record<string, any>; accent: string }) {
+  if (!result) return <div style={{ color: 'var(--muted)', fontSize: 12 }}>No result data available yet.</div>
   const research = result.research || {}
   const branding = result.branding || {}
   const marketing = result.marketing || {}
