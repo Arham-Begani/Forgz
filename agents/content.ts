@@ -1,5 +1,4 @@
-// WARNING: This agent is NEVER called from the Full Launch orchestrator.
-// It only runs when the user explicitly selects the Marketing module.
+// Content Factory Agent
 
 import { z } from 'zod'
 import { GoogleGenerativeAI } from '@google/generative-ai'
@@ -10,9 +9,8 @@ import {
     withRetry,
 } from '@/lib/gemini'
 
-// ── ContentOutput Zod Schema ─────────────────────────────────────────────────
-
-const ContentOutputSchema = z.object({
+// ── ContentOutput Zod Schema ────────────────�const ContentOutputSchema = z.object({
+    marketingPlan: z.string(),
     gtmStrategy: z.object({
         overview: z.string(),
         weeks: z.array(
@@ -66,11 +64,7 @@ const SYSTEM_PROMPT = `
 
 You are Forge's marketing agent. You build go-to-market systems that compound.
 
-## Critical Rule
-
-**You are NEVER part of Full Launch. You always run as a standalone Marketing module.**
-
-## Context Required
+## What You Build
 
 Before writing a single word:
 1. Read venture.context.research (Genesis output) — this is your strategic foundation
@@ -132,6 +126,20 @@ Platform-specific sets:
 - LinkedIn: 3–5 hashtags (professional + industry)
 - Instagram: 10–15 hashtags (broad + niche + brand)
 
+### 6. Comprehensive Marketing Strategy Document
+Write a long-form, professional "30-Day Growth & GTM Strategy".
+- Target length: 1000+ words.
+- Format: Professional Markdown with headers, schedules, and strategic frameworks.
+- Sections required:
+  - Executive Overview
+  - Market Segmentation & Targeting (based on Genesis data)
+  - Messaging Framework: Hero Hook, Key Value Props (in Brand Voice)
+  - Detailed 30-Day Execution Roadmap
+  - Multi-Channel Content Strategy (X, LinkedIn, SEO)
+  - Paid vs. Organic Acquisition Plan
+  - Conversion Funnel Optimization
+  - Success Metrics & KPIs for Month 1
+
 ## Output Rules
 
 - Output strict JSON matching ContentOutputSchema from VENTURE_OBJECT.md
@@ -139,12 +147,14 @@ Platform-specific sets:
 - No generic content — every caption must be specific to this venture
 - Brand voice must be consistent across all 90 posts
 - Pain points from Genesis must appear naturally in marketing copy
+- The marketingPlan field must be a long-form, professional Markdown document.
 
 ## Output Schema
 
 Output your full marketing package as a single JSON object matching this exact structure:
 
 {
+  "marketingPlan": "Detailed Markdown content...",
   "gtmStrategy": {
     "overview": "string",
     "weeks": [
@@ -172,6 +182,11 @@ After your full marketing analysis, output the complete marketing package as a s
 valid JSON object matching the structure above. The JSON must be the last
 thing you output. Do not include any text after the closing brace.
 Output ONLY the JSON — no markdown fences, no explanation after.
+
+IMPORTANT: Do not output any conversational text or "Thought Process" headers. Any step-by-step reasoning or thought process MUST be strictly wrapped inside <think> and </think> tags. Only the final valid JSON should be outside the <think> tags.
+fter.
+
+IMPORTANT: Do not output any conversational text or "Thought Process" headers. Any step-by-step reasoning or thought process MUST be strictly wrapped inside <think> and </think> tags. Only the final valid JSON should be outside the <think> tags.
 `
 
 // ── Agent Runner ──────────────────────────────────────────────────────────────

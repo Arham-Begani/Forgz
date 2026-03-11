@@ -47,6 +47,7 @@ const PipelineOutputSchema = z.object({
             })
         ),
     }),
+    fullComponent: z.string(),
     deploymentUrl: z.string(),
     leadCaptureActive: z.boolean(),
     analyticsActive: z.boolean(),
@@ -62,9 +63,8 @@ export type PipelineOutput = z.infer<typeof PipelineOutputSchema>
 // ── Deployment Stub ──────────────────────────────────────────────────────────
 
 async function deployLandingPage(ventureId: string, result: PipelineOutput): Promise<string> {
-    // TODO: wire real Vercel deployment in post-launch
-    // Return a placeholder URL for now
-    return `https://forge-${ventureId.slice(0, 8)}.vercel.app`
+    // Return a local preview URL
+    return `/v/${ventureId}`
 }
 
 // ── System Prompt ─────────────────────────────────────────────────────────────
@@ -121,15 +121,16 @@ For each page: path, purpose, primary CTA, key sections.
 - Address the top objections from Genesis's research
 - Answers in brand voice
 
-### 3. Next.js Component
+### 3. Next.js Component (The Live Site)
 
-Generate a complete, production-ready landing page as a single Next.js page component using:
-- App Router structure
-- Tailwind CSS for styling
-- Design tokens from Identity Architect's color palette and typography
-- Responsive (mobile-first)
-- Semantic HTML for SEO
-- Meta title and description from brand context
+Generate a complete, production-ready landing page as a single functional Next.js page component.
+- Use the provided brand context for colors and typography.
+- Use Tailwind CSS for all styling.
+- Include the Hero, Features, Social Proof, Pricing, and FAQ sections.
+- Ensure it is mobile-responsive and accessible.
+- Include a working Lead Capture form.
+- The component must be exported as default.
+- Wrap it in a single large string for the "fullComponent" field.
 
 ### 4. Lead Capture Integration
 - Email capture form with field validation
@@ -144,8 +145,7 @@ Generate a complete, production-ready landing page as a single Next.js page comp
 - Comments showing where to add provider-specific code
 
 ### 6. Deployment
-- Deploy via Antigravity deployment hooks
-- Return a real, accessible live URL
+- Return the local preview URL: /v/[ventureId]
 - Confirm lead capture is active
 - Confirm analytics is wired
 
@@ -154,6 +154,7 @@ Generate a complete, production-ready landing page as a single Next.js page comp
 - Output strict JSON matching PipelineOutputSchema from VENTURE_OBJECT.md
 - Copy must use brand voice from Identity output — no generic marketing language
 - Hero headline must reference the primary pain point from Genesis output
+- The fullComponent field must contain the complete, valid React/Next.js code.
 
 ## Output Schema
 
@@ -181,8 +182,9 @@ Output your landing page package as a single JSON object matching this exact str
       { "question": "string", "answer": "string" }
     ]
   },
+  "fullComponent": "string (The complete Next.js page component code)",
   "deploymentUrl": "",
-  "leadCaptureActive": false,
+  "leadCaptureActive": true,
   "analyticsActive": false,
   "seoMetadata": {
     "title": "string",
@@ -196,6 +198,8 @@ After your full landing page generation, output the complete package as a single
 valid JSON object matching the structure above. The JSON must be the last
 thing you output. Do not include any text after the closing brace.
 Output ONLY the JSON — no markdown fences, no explanation after.
+
+IMPORTANT: Do not output any conversational text or "Thought Process" headers. Any step-by-step reasoning or thought process MUST be strictly wrapped inside <think> and </think> tags. Only the final valid JSON should be outside the <think> tags.
 `
 
 // ── Agent Runner ──────────────────────────────────────────────────────────────
@@ -214,7 +218,7 @@ export async function runPipelineAgent(
 
     const userMessage = `Generate a complete landing page for this venture.
 
-${venture.globalIdea ? `Global Startup Vision: ${venture.globalIdea}\n` : ''}Specific Venture Focus: ${venture.name}
+${venture.context?.architectPlan ? `Architect's Plan:\n${venture.context.architectPlan}\n\n` : ''}${venture.globalIdea ? `Global Startup Vision: ${venture.globalIdea}\n` : ''}Specific Venture Focus: ${venture.name}
 
 Research findings:
 ${JSON.stringify(venture.context.research, null, 2)}

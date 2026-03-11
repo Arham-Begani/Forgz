@@ -11,6 +11,7 @@ import {
 
 const GenesisOutputSchema = z.object({
     marketSummary: z.string(),
+    researchPaper: z.string(),
     tam: z.object({
         value: z.string(),
         source: z.string(),
@@ -101,12 +102,28 @@ Identify 12 specific risks. Score each by likelihood (high/medium/low) and impac
 ### Step 6 — Concept Generation
 Produce 10 ranked business concepts that could fill the identified gap. Score each by opportunity (1–10) with clear rationale.
 
+### Step 7 — Detailed Research Paper
+Write a comprehensive, professional "Market Research & Venture Opportunity Paper". 
+- Target length: 1500+ words.
+- Format: Professional Markdown with headers, lists, and tables.
+- Sections required:
+  - Executive Summary
+  - Market Dynamics & Trends (cite specific data)
+  - Deep-Dive: Target Audience & Pain Points (cite community discussions)
+  - Competitive Landscape: Direct & Indirect Competition
+  - Gap Analysis: The Unmet Need
+  - Strategic SWOT Analysis
+  - Venture Feasibility & Market Sizing
+  - Proposed Business Model & Concept Rank
+  - Conclusion & Strategic Recommendation
+
 ## Output Rules
 
 - Output strict JSON matching GenesisOutputSchema from VENTURE_OBJECT.md
 - Validate output structure before returning
 - Broadcast findings to all teammates when used in Full Launch
 - Every data point must have a source field — never leave it empty
+- The researchPaper field must be a long-form, professional Markdown document.
 
 ## Web Search Strategy
 
@@ -119,7 +136,7 @@ Use these search patterns:
 "[competitor] reviews negative"
 "[niche] startup ideas"
 
-Run at minimum 8 searches before producing output.
+Run at minimum 12 searches before producing output.
 
 ## Output Schema
 
@@ -128,6 +145,7 @@ Output your final findings as a single JSON object matching this exact structure
 \`\`\`json
 {
   "marketSummary": "string",
+  "researchPaper": "Detailed Markdown content...",
   "tam": { "value": "string", "source": "string", "methodology": "string" },
   "sam": { "value": "string", "source": "string" },
   "som": { "value": "string", "rationale": "string" },
@@ -156,9 +174,11 @@ Output your final findings as a single JSON object matching this exact structure
 
 CRITICAL OUTPUT INSTRUCTION:
 After all your research and analysis, output your final findings as a single
-valid JSON object matching this exact structure.The JSON must be the last
-thing you output.Do not include any text after the closing brace.
+valid JSON object matching this exact structure. The JSON must be the last
+thing you output. Do not include any text after the closing brace.
 Output ONLY the JSON — no markdown fences, no explanation after.
+
+IMPORTANT: Do not output any conversational text or "Thought Process" headers. Any step-by-step reasoning or thought process MUST be strictly wrapped inside <think> and </think> tags. Only the final valid JSON should be outside the <think> tags.
 `
 
 // ── Agent Runner ──────────────────────────────────────────────────────────────
@@ -171,7 +191,7 @@ export async function runGenesisAgent(
     const userMessage = `Research this venture concept thoroughly using Google Search.
     Find real, current market data with citations.
 
-${venture.globalIdea ? `Global Startup Vision: ${venture.globalIdea}\n` : ''}Specific Venture Focus: ${venture.name}
+${venture.context?.architectPlan ? `Architect's Plan:\n${venture.context.architectPlan}\n\n` : ''}${venture.globalIdea ? `Global Startup Vision: ${venture.globalIdea}\n` : ''}Specific Venture Focus: ${venture.name}
 
 Run at minimum 8 distinct searches covering:
 1. Pain points and frustrations in this space

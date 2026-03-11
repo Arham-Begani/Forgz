@@ -2,7 +2,7 @@ import { runGenesisAgent, GenesisOutput } from './genesis'
 import { runIdentityAgent, IdentityOutput } from './identity'
 import { runPipelineAgent, PipelineOutput } from './pipeline'
 import { runFeasibilityAgent, FeasibilityOutput } from './feasibility'
-// NEVER import runContentAgent — Marketing is not part of Full Launch
+import { runContentAgent, ContentOutput } from './content'
 import { getProModelWithThinking, streamPrompt } from '../lib/gemini'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -10,6 +10,7 @@ import { getProModelWithThinking, streamPrompt } from '../lib/gemini'
 export interface FullLaunchResult {
   research: GenesisOutput
   branding: IdentityOutput
+  marketing: ContentOutput
   landing: PipelineOutput
   feasibility: FeasibilityOutput
 }
@@ -29,13 +30,15 @@ export async function runFullLaunch(
 
   const architectModel = getProModelWithThinking(5000, 'gemini-2.5-pro')
 
-  await streamPrompt(
+  const architectPlanText = await streamPrompt(
     architectModel,
     `You are the Architect Agent — team lead for the Forge venture platform.
      Your job is to analyse a venture concept and produce a brief task plan
-     for your four specialist agents: Genesis, Identity, Pipeline, Feasibility.
+     for your five specialist agents: Genesis, Identity, Content Factory, Pipeline, Feasibility.
      Be specific. Reference the venture concept in each agent brief.
-     Output a short task plan (under 300 words) then stop.`,
+     Output a short task plan (under 300 words) then stop.
+     
+     IMPORTANT: Do not output any conversational text or "Thought Process" headers. Any step-by-step reasoning or thought process MUST be strictly wrapped inside <think> and </think> tags. Only the final output should be outside the <think> tags.`,
     `Venture concept: ${venture.name}
 ${venture.globalIdea ? `Global Startup Vision: ${venture.globalIdea}\n` : ''}
      Briefly plan what each agent should focus on for this specific venture.
@@ -44,6 +47,7 @@ ${venture.globalIdea ? `Global Startup Vision: ${venture.globalIdea}\n` : ''}
   )
 
   await onStream('\n\n')
+  venture = { ...venture, context: { ...venture.context, architectPlan: architectPlanText } }
 
   // ── STEP 1 — Genesis Engine ────────────────────────────────────────────────
 
@@ -77,23 +81,50 @@ ${venture.globalIdea ? `Global Startup Vision: ${venture.globalIdea}\n` : ''}
   await onAgentStatus('identity', 'complete')
   await onStream('\n\n')
 
-  // ── STEP 3 — Pipeline + Feasibility in PARALLEL ───────────────────────────
+  // ── STEP 2.5 — Content Factory (requires Branding) ──────────────────────────
+
+  await onAgentStatus('marketing', 'running')
+  await onStream('=== Content Factory: Marketing Strategy ===\n\n')
+
+  let marketingResult: ContentOutput | null = null
+
+  await runContentAgent(venture, onStream, async (result) => {
+    marketingResult = result
+    venture = { ...venture, context: { ...venture.context, marketing: result } }
+  })
+
+  if (!marketingResult) throw new Error('Marketing agent failed to produce output')
+  await onAgentStatus('marketing', 'complete')
+  await onStream('\n\n')
+
+  // --- STEP 3 — Pipeline + Feasibility in PARALLEL ---------------------------
 
   await onAgentStatus('pipeline', 'running')
   await onAgentStatus('feasibility', 'running')
-  await onStream('=== Running Landing Page + Feasibility in parallel ===\n\n')
+  await onStream('=== Finalizing Production Pipeline & Strategic Validation ===\n\n')
+
+  // Pass ALL context to both agents: Genesis, Identity, AND Marketing
+  const enrichedVenture = { 
+    ...venture, 
+    context: { 
+      ...venture.context, 
+      research: genesisResult,
+      branding: identityResult,
+      marketing: marketingResult
+    } 
+  }
 
   const [landingSettled, feasibilitySettled] = await Promise.allSettled([
     new Promise<PipelineOutput>((resolve, reject) => {
       runPipelineAgent(
-        venture,
+        enrichedVenture,
         async (chunk) => onStream('[Landing] ' + chunk),
         async (result) => resolve(result)
       ).catch(reject)
     }),
     new Promise<FeasibilityOutput>((resolve, reject) => {
       runFeasibilityAgent(
-        venture,
+        enrichedVenture,
         async (chunk) => onStream('[Feasibility] ' + chunk),
         async (result) => resolve(result)
       ).catch(reject)
@@ -127,6 +158,7 @@ ${venture.globalIdea ? `Global Startup Vision: ${venture.globalIdea}\n` : ''}
   await onComplete({
     research: genesisResult,
     branding: identityResult,
+    marketing: marketingResult,
     landing: (landingResult ?? {}) as PipelineOutput,
     feasibility: (feasibilityResult ?? {}) as FeasibilityOutput,
   })

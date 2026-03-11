@@ -14,6 +14,7 @@ import {
 const FeasibilityOutputSchema = z.object({
     verdict: z.enum(['GO', 'NO-GO', 'CONDITIONAL GO']),
     verdictRationale: z.string(),
+    feasibilityReport: z.string(),
     marketTimingScore: z.number().min(1).max(10),
     marketTimingRationale: z.string(),
     financialModel: z.object({
@@ -154,8 +155,19 @@ If unknown or not applicable, say so explicitly.
 Top 5 assumptions the entire model rests on.
 For each: what would invalidate it and how to test it in 30 days.
 
-### 8. Report Table of Contents
-List the 20 section headers of the full feasibility study as a string array.
+### 8. Comprehensive Feasibility & Assessment Report
+Write a long-form, professional "Investment Feasibility & Strategic Assessment".
+- Target length: 1500+ words.
+- Format: Professional Markdown with headers, financial tables, and risk matrices.
+- Sections required:
+  - Executive Summary & Final Verdict
+  - Strategic Thesis: Why this venture, why now?
+  - Detailed Financial Modeling: Assumptions, Projections, and Unit Economics
+  - Operational Roadmap: Year 1-3 Execution Plan
+  - Risk Assessment: Scoring and Mitigation Deep-dive
+  - Competitive Advantage & Moat Development Strategy
+  - Regulatory & Compliance Roadmap
+  - Critical Success Factors & Exit Scenarios
 
 ## Output Rules
 
@@ -164,6 +176,7 @@ List the 20 section headers of the full feasibility study as a string array.
 - All financial figures must be internally consistent
 - Verdict must be definitive — "it depends" is not a verdict
 - Risk mitigations must be specific and actionable, not generic
+- The feasibilityReport field must be a long-form, professional Markdown document.
 
 ## Output Schema
 
@@ -172,6 +185,7 @@ Output your feasibility study as a single JSON object matching this exact struct
 {
   "verdict": "GO|NO-GO|CONDITIONAL GO",
   "verdictRationale": "string",
+  "feasibilityReport": "Detailed Markdown content...",
   "marketTimingScore": 1-10,
   "marketTimingRationale": "string",
   "financialModel": {
@@ -199,6 +213,8 @@ Every financial projection must be internally consistent.
 Show your arithmetic reasoning before committing to figures.
 The verdict must be GO, NO-GO, or CONDITIONAL GO — never vague.
 Output the FeasibilityOutput JSON as the final thing you write.
+
+IMPORTANT: Do not output any conversational text or "Thought Process" headers. Any step-by-step reasoning or thought process MUST be strictly wrapped inside <think> and </think> tags. Only the final valid JSON should be outside the <think> tags.
 `
 
 // ── Agent Runner ──────────────────────────────────────────────────────────────
@@ -214,7 +230,7 @@ export async function runFeasibilityAgent(
 
     const userMessage = `Produce a complete feasibility study with GO/NO-GO verdict.
 
-${venture.globalIdea ? `Global Startup Vision: ${venture.globalIdea}\n` : ''}Specific Venture Focus: ${venture.name}
+${venture.context?.architectPlan ? `Architect's Plan:\n${venture.context.architectPlan}\n\n` : ''}${venture.globalIdea ? `Global Startup Vision: ${venture.globalIdea}\n` : ''}Specific Venture Focus: ${venture.name}
 
 Market research (base all numbers on this data):
 ${JSON.stringify(venture.context.research, null, 2)}

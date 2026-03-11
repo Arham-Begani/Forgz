@@ -12,6 +12,7 @@ import {
 const IdentityOutputSchema = z.object({
     brandName: z.string(),
     brandNameRationale: z.string(),
+    brandBible: z.string(),
     nameCandidates: z.array(z.string()),
     tagline: z.string(),
     missionStatement: z.string(),
@@ -111,12 +112,26 @@ You are Forge's brand creation agent. You build brands that feel inevitable — 
 - Card style (elevated/flat/bordered)
 - Component feel (dense/airy/balanced)
 
+### 10. Comprehensive Brand Bible Document
+Write a long-form, professional "Brand Identity & Design Bible".
+- Target length: 1000+ words.
+- Format: Professional Markdown with headers and visual descriptions.
+- Sections required:
+  - Brand Core: Mission, Vision, and Value Proposition
+  - Target Audience: Psychographics and user personas (based on Genesis research)
+  - Verbal Identity: Tone of Voice deep-dive with samples
+  - Visual Identity: Color theory, typography rationale, and imagery style
+  - Logo System: Detailed concepts and usage principles
+  - UI/UX Principles: The "feel" of the digital product
+  - Brand Manifest: A 3-paragraph inspiring manifesto
+
 ## Output Rules
 
 - Output strict JSON matching IdentityOutputSchema from VENTURE_OBJECT.md
 - Validate output structure before returning
 - The brand must be coherent — every element must reinforce the same archetype
 - No generic outputs — every field must be specific to this venture
+- The brandBible field must be a long-form, professional Markdown document.
 
 ## Output Schema
 
@@ -125,6 +140,7 @@ Output your final Brand Bible as a single JSON object matching this exact struct
 {
   "brandName": "string",
   "brandNameRationale": "string",
+  "brandBible": "Detailed Markdown content...",
   "nameCandidates": ["string", "string", "string", "string", "string"],
   "tagline": "string",
   "missionStatement": "string",
@@ -139,8 +155,8 @@ Output your final Brand Bible as a single JSON object matching this exact struct
     { "name": "string", "hex": "#XXXXXX", "role": "Primary|Accent|Background|Text|Surface", "psychology": "string" }
   ],
   "typography": {
-    "displayFont": "string",
-    "bodyFont": "string",
+    "display font": "string",
+    "body font": "string",
     "usageRules": "string"
   },
   "logoConceptDescriptions": ["string", "string", "string"],
@@ -157,6 +173,8 @@ After your full brand analysis, output your Brand Bible as a single
 valid JSON object matching the structure above. The JSON must be the last
 thing you output. Do not include any text after the closing brace.
 Output ONLY the JSON — no markdown fences, no explanation after.
+
+IMPORTANT: Do not output any conversational text or "Thought Process" headers. Any step-by-step reasoning or thought process MUST be strictly wrapped inside <think> and </think> tags. Only the final valid JSON should be outside the <think> tags.
 `
 
 // ── Agent Runner ──────────────────────────────────────────────────────────────
@@ -172,7 +190,7 @@ export async function runIdentityAgent(
 
     const userMessage = `Build a complete Brand Bible for this venture.
 
-${venture.globalIdea ? `Global Startup Vision: ${venture.globalIdea}\n` : ''}Specific Venture Focus: ${venture.name}
+${venture.context?.architectPlan ? `Architect's Plan:\n${venture.context.architectPlan}\n\n` : ''}${venture.globalIdea ? `Global Startup Vision: ${venture.globalIdea}\n` : ''}Specific Venture Focus: ${venture.name}
 
 Market research (use this to ground every brand decision):
 ${JSON.stringify(venture.context.research, null, 2)}
