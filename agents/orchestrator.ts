@@ -21,7 +21,8 @@ export async function runFullLaunch(
   venture: { ventureId: string; name: string; globalIdea?: string; context: Record<string, unknown> },
   onStream: (line: string) => Promise<void>,
   onAgentStatus: (agentId: string, status: 'waiting' | 'running' | 'complete' | 'failed') => Promise<void>,
-  onComplete: (result: FullLaunchResult) => Promise<void>
+  onComplete: (result: FullLaunchResult) => Promise<void>,
+  depth: 'brief' | 'medium' | 'detailed' = 'medium'
 ): Promise<void> {
 
   // ── STEP 0 — Architect thinks ──────────────────────────────────────────────
@@ -59,7 +60,7 @@ ${venture.globalIdea ? `Global Startup Vision: ${venture.globalIdea}\n` : ''}
   await runGenesisAgent(venture, onStream, async (result) => {
     genesisResult = result
     venture = { ...venture, context: { ...venture.context, research: result } }
-  })
+  }, depth)
 
   if (!genesisResult) throw new Error('Genesis agent failed to produce output')
   await onAgentStatus('genesis', 'complete')

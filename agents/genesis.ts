@@ -136,7 +136,27 @@ Use these search patterns:
 "[competitor] reviews negative"
 "[niche] startup ideas"
 
-Run at minimum 12 searches before producing output.
+## Research Intensity Guidelines
+
+Based on the requested depth, adjust your thoroughness:
+
+### Brief:
+- Run 4-6 searches.
+- Focus on top-level TAM and major competitors.
+- Produce 8 ranked concepts.
+- The 'researchPaper' should be a concise summary (~500 words).
+
+### Medium:
+- Run 10-12 searches.
+- Deep dive into Sam/Som and community pain points.
+- Produce 10 ranked concepts.
+- The 'researchPaper' should be a detailed analysis (~1500 words).
+
+### Detailed:
+- Run 18-24 searches (Exhaustive search).
+- Explore niche sub-markets, obscure competitor weaknesses, and long-tail timing signals.
+- Produce 15 ranked concepts.
+- The 'researchPaper' should be an exhaustive, white-paper style document (~3000 words) with deep analysis of every section.
 
 ## Output Schema
 
@@ -186,14 +206,23 @@ IMPORTANT: Do not output any conversational text or "Thought Process" headers. A
 export async function runGenesisAgent(
     venture: { ventureId: string; name: string; globalIdea?: string; context: Record<string, unknown> },
     onStream: (line: string) => Promise<void>,
-    onComplete: (result: GenesisOutput) => Promise<void>
+    onComplete: (result: GenesisOutput) => Promise<void>,
+    depth: 'brief' | 'medium' | 'detailed' = 'medium'
 ): Promise<void> {
+    const searchCountMap = {
+        brief: 5,
+        medium: 12,
+        detailed: 22
+    }
+
     const userMessage = `Research this venture concept thoroughly using Google Search.
     Find real, current market data with citations.
+    
+    RESEARCH DEPTH REQUESTED: ${depth} (Intensity: ${searchCountMap[depth]} searches)
 
 ${venture.context?.architectPlan ? `Architect's Plan:\n${venture.context.architectPlan}\n\n` : ''}${venture.globalIdea ? `Global Startup Vision: ${venture.globalIdea}\n` : ''}Specific Venture Focus: ${venture.name}
 
-Run at minimum 8 distinct searches covering:
+Run at minimum ${searchCountMap[depth]} distinct searches covering:
 1. Pain points and frustrations in this space
 2. Market size(TAM / SAM / SOM) from credible sources
 3. Direct and indirect competitors

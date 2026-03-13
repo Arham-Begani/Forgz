@@ -1,15 +1,17 @@
 // Content Factory Agent
 
 import { z } from 'zod'
-import { GoogleGenerativeAI } from '@google/generative-ai'
 import {
+    getFlashModel,
     streamPrompt,
     extractJSON,
     withTimeout,
     withRetry,
 } from '@/lib/gemini'
 
-// ── ContentOutput Zod Schema ────────────────�const ContentOutputSchema = z.object({
+// ── ContentOutput Zod Schema ────────────────────────────────────────────────
+
+const ContentOutputSchema = z.object({
     marketingPlan: z.string(),
     gtmStrategy: z.object({
         overview: z.string(),
@@ -184,9 +186,6 @@ thing you output. Do not include any text after the closing brace.
 Output ONLY the JSON — no markdown fences, no explanation after.
 
 IMPORTANT: Do not output any conversational text or "Thought Process" headers. Any step-by-step reasoning or thought process MUST be strictly wrapped inside <think> and </think> tags. Only the final valid JSON should be outside the <think> tags.
-fter.
-
-IMPORTANT: Do not output any conversational text or "Thought Process" headers. Any step-by-step reasoning or thought process MUST be strictly wrapped inside <think> and </think> tags. Only the final valid JSON should be outside the <think> tags.
 `
 
 // ── Agent Runner ──────────────────────────────────────────────────────────────
@@ -218,16 +217,8 @@ Social captions must reference real pain points from the research.
 Output the full ContentOutput JSON at the end.`
 
     const run = async () => {
-        // Custom model config: higher temperature for creative copy, larger output for 90 posts
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
-        const model = genAI.getGenerativeModel({
-            model: 'gemini-2.5-flash',
-            generationConfig: {
-                temperature: 0.8,
-                topP: 0.95,
-                maxOutputTokens: 16000,
-            },
-        })
+        // Use centralized flash model helper
+        const model = getFlashModel()
 
         let fullText = ''
 
