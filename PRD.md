@@ -119,6 +119,19 @@ Produces a 20-page interactive feasibility study including financial projections
 
 ---
 
+### 7. Shadow Board (The "Moat" Feature)
+The Shadow Board is Forge’s unique defense mechanism. It simulates a high-stakes board meeting with three AI personas: The Silicon Skeptic, The UX Evangelist, and The Growth Alchemist. They provide brutal, unfiltered feedback, synthetic user interviews, and a Venture Survival Score.
+
+**Agent:** Shadow Board (gemini-3-pro + extended thinking)
+
+**Output:**
+- Venture Survival Score (1-100)
+- Board Dialogue (3 brutal perspectives)
+- 3 Strategic Pivots
+- 5 Synthetic User Interviews
+
+---
+
 ## Competitive Moat
 
 The Contextual Glue. While tools like Notion AI, Canva, and Copy.ai provide fragmented pieces, Forge provides a unified closed-loop ecosystem where:
@@ -126,8 +139,9 @@ The Contextual Glue. While tools like Notion AI, Canva, and Copy.ai provide frag
 - The Brand Agent knows what the Research Agent found
 - The Content Factory writes in the brand voice the Identity Architect defined
 - The Production Pipeline uses positioning from Research and voice from Branding
+- The Shadow Board stress-tests everything to ensure the venture survives the real world.
 
-No other tool does this end-to-end with shared agent context.
+No other tool does this end-to-end with shared agent context and defensive AI roleplay.
 
 ---
 

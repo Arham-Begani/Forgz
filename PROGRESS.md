@@ -154,3 +154,12 @@ This file is the Agent's memory between sessions.
 - **PageTransition:** `components/ui/PageTransition.tsx` — New reusable page transition wrapper component.
 **Broken:** None. All existing features preserved — SSE streaming, module picker, conversation history, CRUD operations, auth flow.
 **Next:** Continue polish — mobile responsiveness testing, image accessibility fixes, additional micro-interactions.
+
+### Day 7 — March 12, 2026
+**Goal:** AI Enhance feature, rename projects/ventures, remove add venture, manage projects access.
+**Built:**
+- `app/api/enhance/route.ts` — New API route that uses Gemini Flash to enhance raw idea descriptions into detailed, agent-friendly prompts.
+- `app/dashboard/greeting/page.tsx` — Added "Enhance with AI" button in the action bar. Shows spinner during enhancement, green checkmark on success. Automatically replaces textarea content with enhanced version.
+- `app/dashboard/layout.tsx` — Added rename (pencil icon) for projects and ventures in sidebar on hover. Inline edit with Enter/Escape/blur support. Removed "Add venture" button from sidebar. Added "Manage" button next to PROJECTS label linking to dashboard.
+- `app/dashboard/project/[id]/page.tsx` — Added rename button next to project name in header. Added rename and delete buttons on venture cards (visible on hover). Removed "New Venture" button and inline creation form. Updated empty state messaging.
+**Broken:** None. All existing features preserved — SSE streaming, module picker, conversation history, CRUD operations, auth flow, settings page.

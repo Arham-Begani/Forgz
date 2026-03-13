@@ -28,6 +28,7 @@
 | Marketing | gemini-3-flash-preview | Brand context injection + structured output |
 | Landing Page | gemini-3-flash-preview | Code generation + Antigravity deploy hooks |
 | Feasibility | gemini-3-flash-preview | Extended thinking (8k tokens) |
+| Shadow Board | gemini-3-pro | Multi-persona simulation (10k tokens) |
 | Formatting/cleanup | gemini-3-flash-preview | Mechanical tasks only |
 
 All models use prompt caching on system prompts.
@@ -58,6 +59,9 @@ forge/
       deep-validation/
         SKILL.md
         references/schema.md
+      shadow-board/
+        SKILL.md
+        references/schema.md
 
   src/
     agents/
@@ -66,6 +70,7 @@ forge/
       content.ts                     ← Marketing agent
       pipeline.ts                    ← Landing page agent
       feasibility.ts                 ← Feasibility agent
+      shadow.ts                      ← Shadow Board agent
       orchestrator.ts                ← Full Launch orchestrator
 
     lib/
@@ -140,7 +145,7 @@ ventures (
 conversations (
   id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   venture_id     UUID REFERENCES ventures(id) ON DELETE CASCADE,
-  module_id      TEXT NOT NULL,      -- research | branding | marketing | landing | feasibility | full-launch
+  module_id      TEXT NOT NULL,      -- research | branding | marketing | landing | feasibility | shadow-board | full-launch
   prompt         TEXT NOT NULL,
   status         TEXT DEFAULT 'running',  -- running | complete | failed
   stream_output  JSONB DEFAULT '[]', -- array of output lines
@@ -182,6 +187,7 @@ Route to correct agent:
     marketing   → runContentAgent(venture, onStream, onComplete)
     landing     → runPipelineAgent(venture, onStream, onComplete)
     feasibility → runFeasibilityAgent(venture, onStream, onComplete)
+    shadow-board → runShadowBoard(venture, onStream, onComplete)
     full-launch → runFullLaunch(venture, onStream, onComplete)
     ↓
 onStream(line) → write to DB stream_output + emit SSE event
