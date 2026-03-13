@@ -14,9 +14,15 @@ CREATE TABLE IF NOT EXISTS public.users (
 -- Enable Row Level Security
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 
--- Allow users to read their own data
-CREATE POLICY "Users can view own data" ON public.users
-  FOR SELECT USING (auth.uid() = id);
+-- Policies
+CREATE POLICY "Users can view all profiles" ON public.users
+  FOR SELECT USING (true);
+
+CREATE POLICY "Users can update their own profile" ON public.users
+  FOR UPDATE USING (auth.uid() = id);
+
+CREATE POLICY "Users can insert their own profile" ON public.users
+  FOR INSERT WITH CHECK (auth.uid() = id);
 
 -- Trigger function to handle new user signups
 CREATE OR REPLACE FUNCTION public.handle_new_user()
