@@ -94,13 +94,9 @@ export async function runShadowBoard(
     onStream: (line: string) => Promise<void>,
     onComplete: (result: ShadowBoardOutput) => Promise<void>
 ): Promise<void> {
-    if (!venture.context.research) {
-        throw new Error('Research context required for Board Review.')
-    }
-
-    const researchContext = JSON.stringify(venture.context.research, null, 2)
-    const brandingContext = JSON.stringify(venture.context.branding || {}, null, 2)
-    const feasibilityContext = JSON.stringify(venture.context.feasibility || {}, null, 2)
+    const researchContext = venture.context.research ? JSON.stringify(venture.context.research, null, 2) : 'No research data available — analyze based on the venture concept.'
+    const brandingContext = venture.context.branding ? JSON.stringify(venture.context.branding, null, 2) : 'No branding data available.'
+    const feasibilityContext = venture.context.feasibility ? JSON.stringify(venture.context.feasibility, null, 2) : 'No feasibility data available.'
 
     const userMessage = `Convene the Shadow Board for the venture: "${venture.name}".
 
@@ -144,6 +140,6 @@ Provide the final verdict and the board dialogue. Be brutal.`
 
     await withTimeout(
         withRetry(runAgentAction),
-        Number(process.env.AGENT_TIMEOUT_MS ?? 90000)
+        Number(process.env.AGENT_TIMEOUT_MS ?? 120000)
     )
 }

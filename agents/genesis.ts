@@ -253,6 +253,6 @@ Then output your full GenesisOutput JSON.`
 
     await withTimeout(
         withRetry(run),
-        Number(process.env.AGENT_TIMEOUT_MS ?? 60000)
+        Number(process.env.AGENT_TIMEOUT_MS ?? 120000)
     )
 }

@@ -239,27 +239,24 @@ export async function runPipelineAgent(
     onStream: (line: string) => Promise<void>,
     onComplete: (result: PipelineOutput) => Promise<void>
 ): Promise<void> {
-    if (!venture.context.research) {
-        throw new Error('Run Research first.')
-    }
-    if (!venture.context.branding) {
-        throw new Error('Run Branding first.')
-    }
+    const hasResearch = !!venture.context.research
+    const hasBranding = !!venture.context.branding
+
+    const contextParts: string[] = []
+    if (venture.context?.architectPlan) contextParts.push(`## Architect's Plan\n${venture.context.architectPlan}`)
+    if (venture.globalIdea) contextParts.push(`## Global Startup Vision\n${venture.globalIdea}`)
+    if (hasResearch) contextParts.push(`## Research Findings (use these for positioning, pain points, pricing, and FAQ)\n${JSON.stringify(venture.context.research, null, 2)}`)
+    if (hasBranding) contextParts.push(`## Brand Identity (use these EXACT colors, voice, and tone in all copy and design)\n${JSON.stringify(venture.context.branding, null, 2)}`)
+    if (venture.context.marketing) contextParts.push(`## Marketing Strategy (use these messaging angles)\n${JSON.stringify(venture.context.marketing, null, 2)}`)
 
     const userMessage = `Generate a COMPLETE, production-quality landing page for this venture. This will be rendered as a live website — make it stunning.
 
-${venture.context?.architectPlan ? `## Architect's Plan\n${venture.context.architectPlan}\n\n` : ''}${venture.globalIdea ? `## Global Startup Vision\n${venture.globalIdea}\n\n` : ''}## Venture Focus
+${contextParts.join('\n\n')}
+
+## Venture Focus
 ${venture.name}
 
-## Research Findings (use these for positioning, pain points, pricing, and FAQ)
-${JSON.stringify(venture.context.research, null, 2)}
-
-## Brand Identity (use these EXACT colors, voice, and tone in all copy and design)
-${JSON.stringify(venture.context.branding, null, 2)}
-
-${venture.context.marketing
-            ? '## Marketing Strategy (use these messaging angles)\n' + JSON.stringify(venture.context.marketing, null, 2)
-            : ''}
+${!hasResearch && !hasBranding ? '## Note\nNo prior research or branding data is available. Use your best judgment to create a compelling, modern landing page based on the venture concept. Choose appropriate colors, voice, and positioning.\n' : ''}
 
 ## Your Deliverables
 

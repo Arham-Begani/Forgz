@@ -184,18 +184,22 @@ export async function runIdentityAgent(
     onStream: (line: string) => Promise<void>,
     onComplete: (result: IdentityOutput) => Promise<void>
 ): Promise<void> {
-    if (!venture.context.research) {
-        throw new Error('Research context required. Run the Research module first.')
-    }
+    const hasResearch = !!venture.context.research
+
+    const contextParts: string[] = []
+    if (venture.context?.architectPlan) contextParts.push(`Architect's Plan:\n${venture.context.architectPlan}`)
+    if (venture.globalIdea) contextParts.push(`Global Startup Vision: ${venture.globalIdea}`)
+    if (hasResearch) contextParts.push(`Market research (use this to ground every brand decision):\n${JSON.stringify(venture.context.research, null, 2)}`)
 
     const userMessage = `Build a complete Brand Bible for this venture.
 
-${venture.context?.architectPlan ? `Architect's Plan:\n${venture.context.architectPlan}\n\n` : ''}${venture.globalIdea ? `Global Startup Vision: ${venture.globalIdea}\n` : ''}Specific Venture Focus: ${venture.name}
+${contextParts.join('\n\n')}
 
-Market research (use this to ground every brand decision):
-${JSON.stringify(venture.context.research, null, 2)}
+Specific Venture Focus: ${venture.name}
 
-The brand name, voice, and colors must be specific to this market.
+${hasResearch
+    ? 'The brand name, voice, and colors must be specific to this market based on the research above.'
+    : 'No prior research data is available. Use your knowledge to create a strong brand identity based on the venture concept. Be specific — not generic tech startup branding.'}
 Do not produce generic tech startup branding.
 Output the full IdentityOutput JSON at the end.`
 
@@ -220,6 +224,6 @@ Output the full IdentityOutput JSON at the end.`
 
     await withTimeout(
         withRetry(run),
-        Number(process.env.AGENT_TIMEOUT_MS ?? 60000)
+        Number(process.env.AGENT_TIMEOUT_MS ?? 120000)
     )
 }

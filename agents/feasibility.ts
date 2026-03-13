@@ -320,12 +320,14 @@ Output the full FeasibilityOutput JSON at the end.`
 
     const run = async () => {
         const model = getProModelWithSearchAndThinking(cfg.thinkingBudget)
+        let fullText = ''
 
-        const fullText = await streamPrompt(
+        await streamPrompt(
             model,
             buildSystemPrompt(depth),
             userMessage,
             async (chunk) => {
+                fullText += chunk
                 await onStream(chunk)
             }
         )

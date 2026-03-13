@@ -195,25 +195,27 @@ export async function runContentAgent(
     onStream: (line: string) => Promise<void>,
     onComplete: (result: ContentOutput) => Promise<void>
 ): Promise<void> {
-    if (!venture.context.research) {
-        throw new Error('Run Research first.')
-    }
-    if (!venture.context.branding) {
-        throw new Error('Run Branding first.')
-    }
+    const hasResearch = !!venture.context.research
+    const hasBranding = !!venture.context.branding
+
+    const contextParts: string[] = []
+    if (venture.globalIdea) contextParts.push(`Global Startup Vision: ${venture.globalIdea}`)
+    if (hasResearch) contextParts.push(`Market research:\n${JSON.stringify(venture.context.research, null, 2)}`)
+    if (hasBranding) contextParts.push(`Brand identity:\n${JSON.stringify(venture.context.branding, null, 2)}`)
 
     const userMessage = `Build a complete marketing package for this venture.
 
-${venture.globalIdea ? `Global Startup Vision: ${venture.globalIdea}\n` : ''}Specific Venture Focus: ${venture.name}
+${contextParts.join('\n\n')}
 
-Market research:
-${JSON.stringify(venture.context.research, null, 2)}
+Specific Venture Focus: ${venture.name}
 
-Brand identity:
-${JSON.stringify(venture.context.branding, null, 2)}
-
-All content must use the brand voice from the identity document.
-Social captions must reference real pain points from the research.
+${hasResearch && hasBranding
+    ? 'All content must use the brand voice from the identity document.\nSocial captions must reference real pain points from the research.'
+    : hasResearch
+    ? 'Use the research data to ground your marketing strategy. Create a consistent brand voice since no brand identity is available yet.'
+    : hasBranding
+    ? 'Use the brand voice from the identity document. Since no research data is available, use your best judgment for market positioning.'
+    : 'No prior research or branding data is available. Create a compelling marketing package based on the venture concept alone. Be specific and actionable.'}
 Output the full ContentOutput JSON at the end.`
 
     const run = async () => {
@@ -239,6 +241,6 @@ Output the full ContentOutput JSON at the end.`
 
     await withTimeout(
         withRetry(run),
-        Number(process.env.AGENT_TIMEOUT_MS ?? 60000)
+        Number(process.env.AGENT_TIMEOUT_MS ?? 120000)
     )
 }
