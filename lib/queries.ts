@@ -53,7 +53,7 @@ export interface VentureContext {
 export interface Conversation {
   id: string
   venture_id: string
-  module_id: 'research' | 'branding' | 'marketing' | 'landing' | 'feasibility' | 'full-launch'
+  module_id: 'research' | 'branding' | 'marketing' | 'landing' | 'feasibility' | 'full-launch' | 'general' | 'shadow-board'
   prompt: string
   status: 'running' | 'complete' | 'failed'
   stream_output: string[]
@@ -344,4 +344,17 @@ export async function setUserIdea(userId: string, ideaText: string): Promise<voi
       )
     if (error) throw new Error(`setUserIdea failed: ${error.message}`)
   })
+}
+
+// Public venture lookup (no auth required — used for /v/[id] live preview)
+export async function getVenturePublic(id: string): Promise<Venture | null> {
+  const db = await createDb()
+  const { data, error } = await db
+    .from('ventures')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error) return null
+  return data
 }
