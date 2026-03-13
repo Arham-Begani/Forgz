@@ -1,6 +1,18 @@
-// app/layout.tsx
 import type { Metadata, Viewport } from 'next'
+import { DM_Sans, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
+
+const dmSans = DM_Sans({
+    subsets: ['latin'],
+    display: 'swap',
+    variable: '--font-dm-sans',
+})
+
+const jetbrainsMono = JetBrains_Mono({
+    subsets: ['latin'],
+    display: 'swap',
+    variable: '--font-jetbrains-mono',
+})
 
 export const metadata: Metadata = {
     title: 'Forge — Autonomous Venture Orchestrator',
@@ -20,15 +32,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
-        <html lang="en" suppressHydrationWarning>
-            <head>
-                <link rel="preconnect" href="https://fonts.googleapis.com" />
-                <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-                <link
-                    href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=JetBrains+Mono:wght@400;500&display=swap"
-                    rel="stylesheet"
-                />
-            </head>
+        <html lang="en" suppressHydrationWarning className={`${dmSans.variable} ${jetbrainsMono.variable}`}>
             <body className="antialiased">{children}</body>
         </html>
     )

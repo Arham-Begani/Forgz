@@ -1,5 +1,4 @@
 /* app/globals.css — Forge Premium Design System */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,6 +6,9 @@
 
 /* ─── Light Mode ─────────────────────────────────────────────────────────── */
 :root {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), monospace;
+  
   /* Core Palette - Premium Quartz & Obsidian */
   --bg-h: 30;
   --bg-s: 15%;
@@ -319,6 +321,12 @@ body {
 @keyframes progress-bar {
   from { width: 0; }
   to { width: 100%; }
+}
+
+@keyframes nprogress-shimmer {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 @keyframes ripple {
