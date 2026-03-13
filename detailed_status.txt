@@ -1,0 +1,29 @@
+ M PROGRESS.md
+ M agents/content.ts
+ M agents/feasibility.ts
+ M agents/genesis.ts
+ M agents/identity.ts
+ M agents/orchestrator.ts
+ M agents/pipeline.ts
+ M app/api/ventures/[id]/run/route.ts
+ M app/dashboard/greeting/page.tsx
+ M app/dashboard/layout.tsx
+ M app/dashboard/page.tsx
+ M app/dashboard/venture/[id]/[module]/page.tsx
+ M app/globals.css
+ M app/layout.tsx
+ M components/ui/AgentStatusRow.tsx
+ D components/ui/MessageStream.tsx
+ M components/ui/ResultCard.tsx
+ M lib/gemini.ts
+ M package-lock.json
+ M package.json
+?? app/api/ventures/[id]/export/
+?? app/dashboard/venture/[id]/page.tsx
+?? app/v/
+?? components/ui/LoadingScreen.tsx
+?? components/ui/PageTransition.tsx
+?? components/ui/ReportModal.tsx
+?? components/venture/
+?? detailed_status.txt
+?? lib/pdf-export.ts
