@@ -51,7 +51,7 @@ export async function GET() {
     try {
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
         const model = genAI.getGenerativeModel({
-            model: 'gemini-3-pro',
+            model: 'gemini-3-pro-preview',
             generationConfig: { maxOutputTokens: 50 },
         })
         const chat = model.startChat({
