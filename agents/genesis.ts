@@ -10,59 +10,74 @@ import {
 // ── GenesisOutput Zod Schema ─────────────────────────────────────────────────
 
 const GenesisOutputSchema = z.object({
-    marketSummary: z.string(),
-    researchPaper: z.string(),
+    marketSummary: z.string().default('Market summary pending.'),
+    researchPaper: z.string().default('# Market Research\n\nFull research documentation pending.'),
     tam: z.object({
-        value: z.string(),
-        source: z.string(),
-        methodology: z.string(),
+        value: z.string().default('$0'),
+        source: z.string().default('Source pending'),
+        methodology: z.string().default('Top-down estimation'),
+    }).default({
+        value: '$0',
+        source: 'Source pending',
+        methodology: 'Top-down estimation'
     }),
     sam: z.object({
-        value: z.string(),
-        source: z.string(),
+        value: z.string().default('$0'),
+        source: z.string().default('Source pending'),
+    }).default({
+        value: '$0',
+        source: 'Source pending'
     }),
     som: z.object({
-        value: z.string(),
-        rationale: z.string(),
+        value: z.string().default('$0'),
+        rationale: z.string().default('Rationale pending'),
+    }).default({
+        value: '$0',
+        rationale: 'Rationale pending'
     }),
     painPoints: z.array(
         z.object({
             description: z.string(),
             source: z.string(),
-            frequency: z.enum(['high', 'medium', 'low']),
+            frequency: z.enum(['high', 'medium', 'low']).default('medium'),
         })
-    ),
+    ).default([]),
     competitors: z.array(
         z.object({
             name: z.string(),
             positioning: z.string(),
             weakness: z.string(),
         })
-    ),
-    competitorGap: z.string(),
+    ).default([]),
+    competitorGap: z.string().default('Gap analysis pending.'),
     swot: z.object({
-        strengths: z.array(z.string()),
-        weaknesses: z.array(z.string()),
-        opportunities: z.array(z.string()),
-        threats: z.array(z.string()),
+        strengths: z.array(z.string()).default([]),
+        weaknesses: z.array(z.string()).default([]),
+        opportunities: z.array(z.string()).default([]),
+        threats: z.array(z.string()).default([]),
+    }).default({
+        strengths: [],
+        weaknesses: [],
+        opportunities: [],
+        threats: []
     }),
     riskMatrix: z.array(
         z.object({
             risk: z.string(),
-            likelihood: z.enum(['high', 'medium', 'low']),
-            impact: z.enum(['high', 'medium', 'low']),
-            score: z.number(),
+            likelihood: z.enum(['high', 'medium', 'low']).default('medium'),
+            impact: z.enum(['high', 'medium', 'low']).default('medium'),
+            score: z.number().default(5),
         })
-    ),
+    ).default([]),
     topConcepts: z.array(
         z.object({
             name: z.string(),
             description: z.string(),
-            opportunityScore: z.number(),
-            rationale: z.string(),
+            opportunityScore: z.number().default(5),
+            rationale: z.string().default('No rationale provided.'),
         })
-    ),
-    recommendedConcept: z.string(),
+    ).default([]),
+    recommendedConcept: z.string().default('Concept candidate pending.'),
 })
 
 export type GenesisOutput = z.infer<typeof GenesisOutputSchema>
