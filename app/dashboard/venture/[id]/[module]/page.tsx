@@ -323,6 +323,28 @@ export default function ModulePage() {
   const [readingPanelOpen, setReadingPanelOpen] = useState(true)
   const [isDocumentOpen, setIsDocumentOpen] = useState(false)
 
+  // ── Decision Bar state ──────────────────────────────────────────────
+  interface AgentQuestion {
+    id: string
+    category: string
+    question: string
+    options: { label: string; description: string; recommended?: boolean }[]
+  }
+  interface UserDecision {
+    questionId: string
+    category: string
+    question: string
+    selectedLabel: string
+    selectedDescription: string
+    customAnswer?: string
+  }
+  const [pendingQuestions, setPendingQuestions] = useState<AgentQuestion[]>([])
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, { label: string; description: string; custom?: string }>>({})
+  const [isLoadingQuestions, setIsLoadingQuestions] = useState(false)
+  const [pendingPrompt, setPendingPrompt] = useState('')
+  const [decisionBarActive, setDecisionBarActive] = useState(false)
+  const [activeQuestionTab, setActiveQuestionTab] = useState(0)
+
   // ── Timeline functions ──────────────────────────────────────────────
   async function loadTimeline() {
     try {
@@ -459,11 +481,69 @@ export default function ModulePage() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [conversations])
 
+  // Modules that support pre-run questions (not general/co-pilot)
+  const QUESTION_MODULES = ['research', 'branding', 'marketing', 'landing', 'feasibility', 'full-launch']
+
   async function handleSubmit(e?: FormEvent) {
     e?.preventDefault()
     const text = prompt.trim()
-    if (!text || isSubmitting) return
+    if (!text || isSubmitting || isLoadingQuestions) return
 
+    // For question-eligible modules, fetch questions first
+    if (QUESTION_MODULES.includes(activeModule) && !decisionBarActive) {
+      setIsLoadingQuestions(true)
+      setPendingPrompt(text)
+      try {
+        const res = await fetch(`/api/ventures/${ventureId}/questions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ moduleId: activeModule, prompt: text }),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          if (data.questions && data.questions.length > 0) {
+            setPendingQuestions(data.questions)
+            setSelectedAnswers({})
+            setActiveQuestionTab(0)
+            setDecisionBarActive(true)
+            setIsLoadingQuestions(false)
+            return // Wait for user to answer questions
+          }
+        }
+      } catch {
+        // If question generation fails, proceed without questions
+      }
+      setIsLoadingQuestions(false)
+      // Fall through to run without questions
+    }
+
+    executeRun(text)
+  }
+
+  function handleDecisionSubmit() {
+    const decisions: UserDecision[] = pendingQuestions.map(q => {
+      const answer = selectedAnswers[q.id]
+      return {
+        questionId: q.id,
+        category: q.category,
+        question: q.question,
+        selectedLabel: answer?.label ?? 'Skipped',
+        selectedDescription: answer?.description ?? '',
+        customAnswer: answer?.custom,
+      }
+    })
+    setDecisionBarActive(false)
+    setPendingQuestions([])
+    executeRun(pendingPrompt, decisions)
+  }
+
+  function handleSkipQuestions() {
+    setDecisionBarActive(false)
+    setPendingQuestions([])
+    executeRun(pendingPrompt)
+  }
+
+  async function executeRun(text: string, decisions?: UserDecision[]) {
     setPrompt('')
     setIsSubmitting(true)
 
@@ -484,7 +564,7 @@ export default function ModulePage() {
       const runRes = await fetch(`/api/ventures/${ventureId}/run`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ moduleId: activeModule, prompt: text, depth }),
+        body: JSON.stringify({ moduleId: activeModule, prompt: text, depth, decisions }),
       })
       if (!runRes.ok) throw new Error('Failed to start run')
       const { conversationId: serverConversationId } = await runRes.json()
@@ -558,13 +638,19 @@ export default function ModulePage() {
     textareaRef.current?.focus()
   }
 
-  // Reset reading panel when module changes
-  useEffect(() => { setReadingPanelOpen(true) }, [activeModule])
+  // Reset reading panel and decision bar when module changes
+  useEffect(() => {
+    setReadingPanelOpen(true)
+    setDecisionBarActive(false)
+    setPendingQuestions([])
+    setSelectedAnswers({})
+    setIsLoadingQuestions(false)
+  }, [activeModule])
 
   const [pickerOpen, setPickerOpen] = useState(false)
   const hasMessages = conversations.length > 0 && historyLoaded
 
-  const canSubmit = !!prompt.trim() && !isSubmitting
+  const canSubmit = !!prompt.trim() && !isSubmitting && !isLoadingQuestions
 
   // Compute latest result for reading panel
   const latestResult = [...conversations].reverse().find(c => c.result && Object.keys(c.result).length > 0)?.result as Record<string, any> | null
@@ -1252,6 +1338,316 @@ export default function ModulePage() {
         </AnimatePresence>
       )}
 
+      {/* ── Decision Bar (above input) ── */}
+      {mounted && (
+        <AnimatePresence>
+          {decisionBarActive && pendingQuestions.length > 0 && !isDocumentOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: 20, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: 'auto' }}
+              exit={{ opacity: 0, y: 20, height: 0 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              style={{
+                background: 'var(--glass-bg-strong)',
+                backdropFilter: 'blur(28px)',
+                WebkitBackdropFilter: 'blur(28px)',
+                borderTop: '1px solid var(--border)',
+                padding: '0 16px',
+                flexShrink: 0,
+                zIndex: 11,
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+            >
+              <div style={{ maxWidth: 780, margin: '0 auto', padding: '16px 0 14px' }}>
+                {/* Category tabs */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginBottom: 16 }}>
+                  {pendingQuestions.map((q, idx) => (
+                    <motion.button
+                      key={q.id}
+                      type="button"
+                      onClick={() => setActiveQuestionTab(idx)}
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      style={{
+                        padding: '6px 14px',
+                        borderRadius: 8,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        letterSpacing: '0.02em',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontFamily: 'inherit',
+                        transition: 'all 0.2s',
+                        background: activeQuestionTab === idx ? `${mod.accent}18` : 'transparent',
+                        color: activeQuestionTab === idx ? mod.accent : 'var(--muted)',
+                        borderBottom: activeQuestionTab === idx ? `2px solid ${mod.accent}` : '2px solid transparent',
+                      }}
+                    >
+                      {q.category}
+                      {selectedAnswers[q.id] && (
+                        <span style={{
+                          display: 'inline-block',
+                          width: 6,
+                          height: 6,
+                          borderRadius: '50%',
+                          background: '#22c55e',
+                          marginLeft: 6,
+                          verticalAlign: 'middle',
+                        }} />
+                      )}
+                    </motion.button>
+                  ))}
+                  {/* Skip / close */}
+                  <motion.button
+                    type="button"
+                    onClick={handleSkipQuestions}
+                    whileHover={{ scale: 1.05, color: mod.accent }}
+                    whileTap={{ scale: 0.95 }}
+                    style={{
+                      marginLeft: 'auto',
+                      padding: '5px 10px',
+                      borderRadius: 7,
+                      fontSize: 10,
+                      fontWeight: 600,
+                      color: 'var(--muted)',
+                      background: 'transparent',
+                      border: '1px solid var(--border)',
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      letterSpacing: '0.03em',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    Skip
+                  </motion.button>
+                </div>
+
+                {/* Active question */}
+                <AnimatePresence mode="wait">
+                  {pendingQuestions[activeQuestionTab] && (
+                    <motion.div
+                      key={pendingQuestions[activeQuestionTab].id}
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {/* Question text */}
+                      <p style={{
+                        fontSize: 14,
+                        fontWeight: 600,
+                        color: 'var(--text)',
+                        margin: '0 0 14px',
+                        lineHeight: 1.5,
+                        letterSpacing: '-0.01em',
+                      }}>
+                        {pendingQuestions[activeQuestionTab].question}
+                      </p>
+
+                      {/* Options */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {pendingQuestions[activeQuestionTab].options.map((opt) => {
+                          const qId = pendingQuestions[activeQuestionTab].id
+                          const isSelected = selectedAnswers[qId]?.label === opt.label
+
+                          return (
+                            <motion.button
+                              key={opt.label}
+                              type="button"
+                              onClick={() => {
+                                setSelectedAnswers(prev => ({
+                                  ...prev,
+                                  [qId]: { label: opt.label, description: opt.description },
+                                }))
+                                // Auto-advance to next unanswered question
+                                const nextUnanswered = pendingQuestions.findIndex(
+                                  (q, i) => i > activeQuestionTab && !selectedAnswers[q.id]
+                                )
+                                if (nextUnanswered !== -1) {
+                                  setTimeout(() => setActiveQuestionTab(nextUnanswered), 300)
+                                }
+                              }}
+                              whileHover={{ scale: 1.01, x: 2 }}
+                              whileTap={{ scale: 0.99 }}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'flex-start',
+                                gap: 12,
+                                padding: '12px 14px',
+                                borderRadius: 12,
+                                border: isSelected
+                                  ? `1.5px solid ${mod.accent}`
+                                  : '1.5px solid var(--border)',
+                                background: isSelected
+                                  ? `${mod.accent}0c`
+                                  : 'var(--glass-bg)',
+                                cursor: 'pointer',
+                                fontFamily: 'inherit',
+                                textAlign: 'left',
+                                transition: 'all 0.2s',
+                                boxShadow: isSelected
+                                  ? `0 2px 12px ${mod.accent}15`
+                                  : 'none',
+                              }}
+                            >
+                              {/* Radio circle */}
+                              <div style={{
+                                width: 20,
+                                height: 20,
+                                borderRadius: '50%',
+                                border: isSelected
+                                  ? `2px solid ${mod.accent}`
+                                  : '2px solid var(--muted)',
+                                flexShrink: 0,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginTop: 1,
+                                transition: 'all 0.2s',
+                              }}>
+                                {isSelected && (
+                                  <motion.div
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    style={{
+                                      width: 10,
+                                      height: 10,
+                                      borderRadius: '50%',
+                                      background: mod.accent,
+                                    }}
+                                  />
+                                )}
+                              </div>
+
+                              <div style={{ flex: 1 }}>
+                                <div style={{
+                                  fontSize: 13,
+                                  fontWeight: 600,
+                                  color: isSelected ? 'var(--text)' : 'var(--text-soft)',
+                                  marginBottom: 2,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 8,
+                                }}>
+                                  {opt.label}
+                                  {opt.recommended && (
+                                    <span style={{
+                                      fontSize: 9,
+                                      fontWeight: 800,
+                                      color: mod.accent,
+                                      background: `${mod.accent}15`,
+                                      borderRadius: 4,
+                                      padding: '1px 6px',
+                                      letterSpacing: '0.04em',
+                                      textTransform: 'uppercase',
+                                    }}>
+                                      Recommended
+                                    </span>
+                                  )}
+                                </div>
+                                <div style={{
+                                  fontSize: 12,
+                                  color: 'var(--muted)',
+                                  lineHeight: 1.4,
+                                }}>
+                                  {opt.description}
+                                </div>
+                              </div>
+                            </motion.button>
+                          )
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Submit decisions row */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginTop: 14,
+                  paddingTop: 12,
+                  borderTop: '1px solid var(--border)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{
+                      fontSize: 11,
+                      color: 'var(--muted)',
+                      fontFamily: "'JetBrains Mono', monospace",
+                    }}>
+                      {Object.keys(selectedAnswers).length}/{pendingQuestions.length} answered
+                    </span>
+                  </div>
+                  <motion.button
+                    type="button"
+                    onClick={handleDecisionSubmit}
+                    whileHover={{ scale: 1.04, boxShadow: `0 4px 16px ${mod.accent}30` }}
+                    whileTap={{ scale: 0.96 }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 7,
+                      padding: '8px 18px',
+                      borderRadius: 10,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      letterSpacing: '-0.01em',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      background: `linear-gradient(135deg, ${mod.accent}, ${mod.accent}cc)`,
+                      color: '#fff',
+                      boxShadow: `0 2px 10px ${mod.accent}30`,
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="12" y1="19" x2="12" y2="5" /><polyline points="5 12 12 5 19 12" />
+                    </svg>
+                    Submit & Run
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
+
+      {/* ── Question loading indicator ── */}
+      {mounted && isLoadingQuestions && !isDocumentOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          style={{
+            background: 'var(--glass-bg-strong)',
+            backdropFilter: 'blur(28px)',
+            borderTop: '1px solid var(--border)',
+            padding: '12px 16px',
+            flexShrink: 0,
+            zIndex: 11,
+          }}
+        >
+          <div style={{ maxWidth: 780, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <motion.div
+              style={{
+                width: 16,
+                height: 16,
+                borderRadius: '50%',
+                border: `2px solid ${mod.accent}30`,
+                borderTopColor: mod.accent,
+              }}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }}
+            />
+            <span style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 500 }}>
+              Preparing strategic questions for you...
+            </span>
+          </div>
+        </motion.div>
+      )}
+
       {/* ── Input area ── */}
       {mounted && (
         <AnimatePresence>
@@ -1340,9 +1736,14 @@ export default function ModulePage() {
                       onKeyDown={handleKeyDown}
                       onFocus={() => setInputFocused(true)}
                       onBlur={() => setInputFocused(false)}
-                      placeholder={`Ask ${mod.label} anything about your venture...`}
+                      placeholder={decisionBarActive ? 'Answer the questions above, then submit...' : `Ask ${mod.label} anything about your venture...`}
                       rows={1}
-                      style={textareaStyle}
+                      style={{
+                        ...textareaStyle,
+                        opacity: decisionBarActive ? 0.4 : 1,
+                        pointerEvents: decisionBarActive ? 'none' : 'auto',
+                      }}
+                      disabled={decisionBarActive}
                     />
 
                     {/* Send button + hint row */}
