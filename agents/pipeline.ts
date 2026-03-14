@@ -284,11 +284,11 @@ Output the complete PipelineOutput JSON.`
         // Custom model config: lower temp for code gen accuracy, larger output for full page component
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
         const model = genAI.getGenerativeModel({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             generationConfig: {
                 temperature: 0.6,
                 topP: 0.92,
-                maxOutputTokens: 32000,
+                maxOutputTokens: 32768,
             },
         })
 
