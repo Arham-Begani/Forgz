@@ -12,48 +12,55 @@ import {
 // ── ContentOutput Zod Schema ────────────────────────────────────────────────
 
 const ContentOutputSchema = z.object({
-    marketingPlan: z.string(),
+    marketingPlan: z.string().default('# Marketing Plan\n\nFull marketing documentation pending.'),
     gtmStrategy: z.object({
-        overview: z.string(),
+        overview: z.string().default('GTM overview pending.'),
         weeks: z.array(
             z.object({
                 week: z.number(),
-                theme: z.string(),
-                actions: z.array(z.string()),
-                kpis: z.array(z.string()),
+                theme: z.string().default('Theme pending'),
+                actions: z.array(z.string()).default([]),
+                kpis: z.array(z.string()).default([]),
             })
-        ),
+        ).default([]),
+    }).default({
+        overview: 'GTM overview pending.',
+        weeks: []
     }),
     socialCalendar: z.array(
         z.object({
             day: z.number(),
-            platform: z.enum(['x', 'linkedin', 'instagram']),
-            caption: z.string(),
-            hashtags: z.array(z.string()),
-            postType: z.string(),
+            platform: z.enum(['x', 'linkedin', 'instagram']).default('x'),
+            caption: z.string().default('Caption pending.'),
+            hashtags: z.array(z.string()).default([]),
+            postType: z.string().default('Social post'),
         })
-    ),
+    ).default([]),
     seoOutlines: z.array(
         z.object({
             title: z.string(),
-            targetKeyword: z.string(),
-            searchIntent: z.string(),
-            outline: z.array(z.string()),
-            estimatedTraffic: z.string(),
+            targetKeyword: z.string().default('Keyword pending'),
+            searchIntent: z.string().default('Informational'),
+            outline: z.array(z.string()).default([]),
+            estimatedTraffic: z.string().default('Low'),
         })
-    ),
+    ).default([]),
     emailSequence: z.array(
         z.object({
             day: z.number(),
-            subject: z.string(),
-            preview: z.string(),
-            bodyOutline: z.array(z.string()),
+            subject: z.string().default('Subject pending'),
+            preview: z.string().default('Preview pending'),
+            bodyOutline: z.array(z.string()).default([]),
         })
-    ),
+    ).default([]),
     hashtagStrategy: z.object({
-        x: z.array(z.string()),
-        linkedin: z.array(z.string()),
-        instagram: z.array(z.string()),
+        x: z.array(z.string()).default([]),
+        linkedin: z.array(z.string()).default([]),
+        instagram: z.array(z.string()).default([]),
+    }).default({
+        x: [],
+        linkedin: [],
+        instagram: []
     }),
 })
 
