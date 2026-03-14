@@ -10,18 +10,22 @@ import {
 // ── IdentityOutput Zod Schema ────────────────────────────────────────────────
 
 const IdentityOutputSchema = z.object({
-    brandName: z.string(),
-    brandNameRationale: z.string(),
-    brandBible: z.string(),
-    nameCandidates: z.array(z.string()),
-    tagline: z.string(),
-    missionStatement: z.string(),
-    brandArchetype: z.string(),
-    brandPersonality: z.array(z.string()),
+    brandName: z.string().default('Untitled Venture'),
+    brandNameRationale: z.string().default('No rationale provided.'),
+    brandBible: z.string().default('# Brand Bible\n\nFull brand documentation pending.'),
+    nameCandidates: z.array(z.string()).default([]),
+    tagline: z.string().default('Innovation redefined.'),
+    missionStatement: z.string().default('To build the future of our industry.'),
+    brandArchetype: z.string().default('The Creator'),
+    brandPersonality: z.array(z.string()).default(['Professional', 'Innovative', 'Trustworthy']),
     toneOfVoice: z.object({
-        description: z.string(),
-        doExamples: z.array(z.string()),
-        dontExamples: z.array(z.string()),
+        description: z.string().default('Professional and encouraging.'),
+        doExamples: z.array(z.string()).default([]),
+        dontExamples: z.array(z.string()).default([]),
+    }).default({
+        description: 'Professional and encouraging.',
+        doExamples: [],
+        dontExamples: []
     }),
     colorPalette: z.array(
         z.object({
@@ -30,18 +34,30 @@ const IdentityOutputSchema = z.object({
             role: z.string(),
             psychology: z.string(),
         })
-    ),
+    ).default([
+        { name: 'Primary Blue', hex: '#2563eb', role: 'Primary', psychology: 'Trust and stability' },
+        { name: 'Accent Orange', hex: '#f97316', role: 'Accent', psychology: 'Energy and action' }
+    ]),
     typography: z.object({
-        displayFont: z.string(),
-        bodyFont: z.string(),
-        usageRules: z.string(),
+        displayFont: z.string().default('Montserrat'),
+        bodyFont: z.string().default('Open Sans'),
+        usageRules: z.string().default('Use for headlines and body text.'),
+    }).default({
+        displayFont: 'Montserrat',
+        bodyFont: 'Open Sans',
+        usageRules: 'Use for headlines and body text.'
     }),
-    logoConceptDescriptions: z.array(z.string()),
+    logoConceptDescriptions: z.array(z.string()).default([]),
     uiKitSpec: z.object({
-        borderRadius: z.string(),
-        spacing: z.string(),
-        buttonStyle: z.string(),
-        cardStyle: z.string(),
+        borderRadius: z.string().default('8px'),
+        spacing: z.string().default('16px'),
+        buttonStyle: z.string().default('Filled with rounded corners'),
+        cardStyle: z.string().default('Elevated with subtle shadow'),
+    }).default({
+        borderRadius: '8px',
+        spacing: '16px',
+        buttonStyle: 'Filled with rounded corners',
+        cardStyle: 'Elevated with subtle shadow'
     }),
 })
 
@@ -155,8 +171,8 @@ Output your final Brand Bible as a single JSON object matching this exact struct
     { "name": "string", "hex": "#XXXXXX", "role": "Primary|Accent|Background|Text|Surface", "psychology": "string" }
   ],
   "typography": {
-    "display font": "string",
-    "body font": "string",
+    "displayFont": "string",
+    "bodyFont": "string",
     "usageRules": "string"
   },
   "logoConceptDescriptions": ["string", "string", "string"],
