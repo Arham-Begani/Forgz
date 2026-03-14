@@ -12,49 +12,64 @@ import {
 const PipelineOutputSchema = z.object({
     sitemap: z.array(
         z.object({
-            page: z.string(),
-            path: z.string(),
-            purpose: z.string(),
+            page: z.string().default('Untitled Page'),
+            path: z.string().default('/'),
+            purpose: z.string().default('Page purpose pending.'),
         })
-    ),
+    ).default([]),
     landingPageCopy: z.object({
         hero: z.object({
-            headline: z.string(),
-            subheadline: z.string(),
-            ctaPrimary: z.string(),
-            ctaSecondary: z.string(),
+            headline: z.string().default('Idea to launch in minutes.'),
+            subheadline: z.string().default('The fastest way to validate your next big thing.'),
+            ctaPrimary: z.string().default('Get Started'),
+            ctaSecondary: z.string().default('Learn More'),
+        }).default({
+            headline: 'Idea to launch in minutes.',
+            subheadline: 'The fastest way to validate your next big thing.',
+            ctaPrimary: 'Get Started',
+            ctaSecondary: 'Learn More'
         }),
         features: z.array(
             z.object({
-                title: z.string(),
-                description: z.string(),
-                icon: z.string(),
+                title: z.string().default('Feature'),
+                description: z.string().default('Feature description pending.'),
+                icon: z.string().default('🚀'),
             })
-        ),
-        socialProof: z.array(z.string()),
+        ).default([]),
+        socialProof: z.array(z.string()).default([]),
         pricing: z.array(
             z.object({
-                tier: z.string(),
-                price: z.string(),
-                features: z.array(z.string()),
-                cta: z.string(),
+                tier: z.string().default('Pro'),
+                price: z.string().default('$0'),
+                features: z.array(z.string()).default([]),
+                cta: z.string().default('Start Now'),
             })
-        ),
+        ).default([]),
         faq: z.array(
             z.object({
-                question: z.string(),
-                answer: z.string(),
+                question: z.string().default('Question?'),
+                answer: z.string().default('Answer pending.'),
             })
-        ),
+        ).default([]),
+    }).default({
+        hero: { headline: 'Idea to launch in minutes.', subheadline: '...', ctaPrimary: '...', ctaSecondary: '...' },
+        features: [],
+        socialProof: [],
+        pricing: [],
+        faq: []
     }),
-    fullComponent: z.string(),
-    deploymentUrl: z.string(),
-    leadCaptureActive: z.boolean(),
-    analyticsActive: z.boolean(),
+    fullComponent: z.string().default('export default function LandingPage() { return <div>Landing Page Pending</div> }'),
+    deploymentUrl: z.string().default(''),
+    leadCaptureActive: z.boolean().default(false),
+    analyticsActive: z.boolean().default(false),
     seoMetadata: z.object({
-        title: z.string(),
-        description: z.string(),
-        keywords: z.array(z.string()),
+        title: z.string().default('Forge Startup'),
+        description: z.string().default('Built with Forge AI.'),
+        keywords: z.array(z.string()).default([]),
+    }).default({
+        title: 'Forge Startup',
+        description: 'Built with Forge AI.',
+        keywords: []
     }),
 })
 
