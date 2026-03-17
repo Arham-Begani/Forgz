@@ -5,6 +5,8 @@ import {
     extractJSON,
     withTimeout,
     withRetry,
+    getFlashModel,
+    Content,
 } from '@/lib/gemini'
 
 // ── PipelineOutput Zod Schema ────────────────────────────────────────────────
@@ -252,7 +254,8 @@ IMPORTANT: Any step-by-step reasoning MUST be wrapped inside <think> and </think
 export async function runPipelineAgent(
     venture: { ventureId: string; name: string; globalIdea?: string; context: Record<string, unknown> },
     onStream: (line: string) => Promise<void>,
-    onComplete: (result: PipelineOutput) => Promise<void>
+    onComplete: (result: PipelineOutput) => Promise<void>,
+    history: Content[] = []
 ): Promise<void> {
     const hasResearch = !!venture.context.research
     const hasBranding = !!venture.context.branding
@@ -264,7 +267,10 @@ export async function runPipelineAgent(
     if (hasBranding) contextParts.push(`## Brand Identity (use these EXACT colors, voice, and tone in all copy and design)\n${JSON.stringify(venture.context.branding, null, 2)}`)
     if (venture.context.marketing) contextParts.push(`## Marketing Strategy (use these messaging angles)\n${JSON.stringify(venture.context.marketing, null, 2)}`)
 
-    const userMessage = `Generate a COMPLETE, production-quality landing page for this venture. This will be rendered as a live website — make it stunning.
+    const isContinuation = history.length > 0
+    const userMessage = isContinuation
+        ? "Continue from where you left off. Do not repeat anything already outputted. Complete the PipelineOutput JSON object strictly. The fullComponent MUST be completed fully."
+        : `Generate a COMPLETE, production-quality landing page for this venture. This will be rendered as a live website — make it stunning.
 
 ${contextParts.join('\n\n')}
 
@@ -297,17 +303,8 @@ Output the complete PipelineOutput JSON.`
 
     const run = async () => {
         // Custom model config: lower temp for code gen accuracy, larger output for full page component
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
-        const model = genAI.getGenerativeModel({
-            model: 'gemini-3-flash-preview',
-            generationConfig: {
-                temperature: 0.6,
-                topP: 0.92,
-                maxOutputTokens: 32768,
-            },
-        })
-
-        let fullText = ''
+        const model = getFlashModel()
+        let fullText = (history.find(h => h.role === 'model')?.parts[0] as any)?.text || ''
 
         await streamPrompt(
             model,
@@ -316,7 +313,8 @@ Output the complete PipelineOutput JSON.`
             async (chunk) => {
                 fullText += chunk
                 await onStream(chunk)
-            }
+            },
+            history
         )
 
         const raw = extractJSON(fullText) as PipelineOutput
