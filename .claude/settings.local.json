@@ -11,7 +11,10 @@
       "Bash(git diff:*)",
       "Bash(git add:*)",
       "Bash(ls -la /c/Users/arham/Documents/Github/Forge/agents/ | grep -E \"\\\\.ts$\")",
-      "Bash(ls C:/Users/arham/Documents/Github/Forge/app/api/ventures/\\\\[id\\\\]/ 2>/dev/null)"
+      "Bash(ls C:/Users/arham/Documents/Github/Forge/app/api/ventures/\\\\[id\\\\]/ 2>/dev/null)",
+      "Bash(ls:*)",
+      "Bash(pkill:*)",
+      "Bash(npx skills:*)"
     ]
   }
 }
