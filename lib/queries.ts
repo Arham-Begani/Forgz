@@ -53,7 +53,7 @@ export interface VentureContext {
 export interface Conversation {
   id: string
   venture_id: string
-  module_id: 'research' | 'branding' | 'marketing' | 'landing' | 'feasibility' | 'full-launch' | 'general' | 'shadow-board' | 'investor-kit'
+  module_id: 'research' | 'branding' | 'marketing' | 'landing' | 'feasibility' | 'full-launch' | 'general' | 'shadow-board' | 'investor-kit' | 'launch-autopilot'
   prompt: string
   status: 'running' | 'complete' | 'failed'
   stream_output: string[]
