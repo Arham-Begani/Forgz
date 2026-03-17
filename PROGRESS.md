@@ -185,4 +185,12 @@ This file is the Agent's memory between sessions.
 - **Orchestrator Upgrade:** Updated Architect agent to use `gemini-3-pro-preview`.
 - **Debug Route:** Refreshed `app/api/debug/gemini/route.ts` with working Gemini 3.0 test cases.
 **Broken:** None.
-**Next:** Finalize testing of Investor Kit and Co-pilot modules with the new model configuration.
+### Day 11 — March 17, 2026
+**Goal:** Fix Shadow Board AI and improve agent robustness.
+**Built:**
+- **Shadow Board AI Fix**:
+    - Resolved `thinkingConfig` compatibility issues in `lib/gemini.ts` by adding both camelCase and snake_case properties to ensure the Gemini API correctly receives the `thinking_budget`.
+    - Improved `agents/shadow.ts` robustness with a defensive `ShadowBoardSchema.parse(raw || {})` call to prevent UI crashes if the model fails to output valid JSON.
+    - Optimized `shadow.ts` execution loop: refactored `withRetry` around `withTimeout` to guarantee each retry attempt has its own dedicated 120s window.
+    - Hardened the `runShadowBoard` system prompt to better enforce the final JSON structure and persona consistency.
+**Next:** Test the Shadow Board with various venture concepts to verify long-thinking-step completions.
