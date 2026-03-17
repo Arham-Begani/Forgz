@@ -7,6 +7,7 @@ import {
     extractJSON,
     withTimeout,
     withRetry,
+    Content,
 } from '@/lib/gemini'
 
 // ── ContentOutput Zod Schema ────────────────────────────────────────────────
@@ -200,7 +201,8 @@ IMPORTANT: Do not output any conversational text or "Thought Process" headers. A
 export async function runContentAgent(
     venture: { ventureId: string; name: string; globalIdea?: string; context: Record<string, unknown> },
     onStream: (line: string) => Promise<void>,
-    onComplete: (result: ContentOutput) => Promise<void>
+    onComplete: (result: ContentOutput) => Promise<void>,
+    history: Content[] = []
 ): Promise<void> {
     const hasResearch = !!venture.context.research
     const hasBranding = !!venture.context.branding
@@ -210,7 +212,10 @@ export async function runContentAgent(
     if (hasResearch) contextParts.push(`Market research:\n${JSON.stringify(venture.context.research, null, 2)}`)
     if (hasBranding) contextParts.push(`Brand identity:\n${JSON.stringify(venture.context.branding, null, 2)}`)
 
-    const userMessage = `Build a complete marketing package for this venture.
+    const isContinuation = history.length > 0
+    const userMessage = isContinuation
+        ? "Continue from where you left off. Do not repeat anything already outputted. Complete the ContentOutput JSON object strictly."
+        : `Build a complete marketing package for this venture.
 
 ${contextParts.join('\n\n')}
 
@@ -226,10 +231,8 @@ ${hasResearch && hasBranding
 Output the full ContentOutput JSON at the end.`
 
     const run = async () => {
-        // Use centralized flash model helper
         const model = getFlashModel()
-
-        let fullText = ''
+        let fullText = (history.find(h => h.role === 'model')?.parts[0] as any)?.text || ''
 
         await streamPrompt(
             model,
@@ -238,7 +241,8 @@ Output the full ContentOutput JSON at the end.`
             async (chunk) => {
                 fullText += chunk
                 await onStream(chunk)
-            }
+            },
+            history
         )
 
         const raw = extractJSON(fullText)
