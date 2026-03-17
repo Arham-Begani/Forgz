@@ -2,6 +2,7 @@ import {
     getFlashModel,
     streamPrompt,
     withTimeout,
+    Content,
 } from '@/lib/gemini'
 
 // ── General Chat Agent ──────────────────────────────────────────────────────
@@ -191,6 +192,7 @@ export async function runGeneralAgent(
     venture: VentureInput,
     onStream: (chunk: string) => Promise<void>,
     onComplete: (result: Record<string, unknown>) => Promise<void>,
+    history: Content[] = []
 ): Promise<void> {
     const model = getFlashModel()
 
@@ -199,8 +201,13 @@ export async function runGeneralAgent(
     const contextBlock = buildDeepContext(venture.globalIdea, ctx)
     const userMessage = `${venture.name}${contextBlock}`
 
+    const isContinuation = history.length > 0
+    const finalUserMessage = isContinuation
+        ? "Please continue your previous response."
+        : userMessage
+
     const fullText = await withTimeout(
-        streamPrompt(model, SYSTEM_PROMPT, userMessage, onStream),
+        streamPrompt(model, SYSTEM_PROMPT, finalUserMessage, onStream, history),
         60_000
     )
 
