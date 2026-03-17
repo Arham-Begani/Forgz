@@ -25,6 +25,9 @@ const MODULES = [
   { id: 'landing', label: 'Landing Page', accent: '#8C7A5A', description: 'Sitemap, copy, Next.js component, live deployment', agentName: 'Pipeline' },
   { id: 'feasibility', label: 'Feasibility', accent: '#7A5A8C', description: 'Financial model, risk matrix, GO/NO-GO verdict', agentName: 'Feasibility' },
   { id: 'general', label: 'Co-pilot', accent: '#6B8F71', description: 'Your venture-aware co-founder — knows your data, competitors, financials', agentName: 'Co-pilot' },
+  { id: 'shadow-board', label: 'Shadow Board', accent: '#E04848', description: 'Silicon board of directors — stress-test your venture from every angle', agentName: 'Shadow Board' },
+  { id: 'launch-autopilot', label: 'Launch Autopilot', accent: '#B8864E', description: '14-day launch calendar with exact copy to paste — just execute', agentName: 'Autopilot' },
+  { id: 'mvp-scalpel', label: 'MVP Scalpel', accent: '#C45A5A', description: 'Cut features ruthlessly — kill list, skeleton MVP, weekend build spec', agentName: 'Scalpel' },
 ] as const
 
 type ModuleId = typeof MODULES[number]['id']
@@ -43,6 +46,9 @@ const SUGGESTIONS: Record<string, [string, string]> = {
   'landing': ['Draft a high-impact landing page with copy', 'Design a sitemap and wireframe for the app'],
   'feasibility': ['Run a detailed financial and risk analysis', 'Stress test the business model and scalability'],
   'general': ["What's my biggest competitive risk?", 'Write me a cold email to investors'],
+  'shadow-board': ['Run a full board review of my venture strategy', 'Challenge my assumptions from investor and operator perspectives'],
+  'launch-autopilot': ['Generate my 14-day launch execution plan', 'Build a paste-ready launch calendar for all channels'],
+  'mvp-scalpel': ['Cut my feature list down to a shippable weekend MVP', 'Tell me what NOT to build and how to get first dollar fast'],
 }
 
 // ─── Full Launch agent rows ───────────────────────────────────────────────────
@@ -543,7 +549,7 @@ export default function ModulePage() {
     executeRun(pendingPrompt)
   }
 
-  async function executeRun(text: string, decisions?: UserDecision[]) {
+  async function executeRun(text: string, decisions?: UserDecision[], isContinuation = false, partialOutput?: string) {
     setPrompt('')
     setIsSubmitting(true)
 
@@ -564,7 +570,7 @@ export default function ModulePage() {
       const runRes = await fetch(`/api/ventures/${ventureId}/run`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ moduleId: activeModule, prompt: text, depth, decisions }),
+        body: JSON.stringify({ moduleId: activeModule, prompt: text, depth, decisions, isContinuation, partialOutput }),
       })
       if (!runRes.ok) throw new Error('Failed to start run')
       const { conversationId: serverConversationId } = await runRes.json()
@@ -636,6 +642,11 @@ export default function ModulePage() {
     setPrompt(entry.prompt)
     setConversations(prev => prev.filter(c => c.conversationId !== entry.conversationId))
     textareaRef.current?.focus()
+  }
+
+  function handleContinue(entry: ConversationEntry) {
+    const partialOutput = entry.lines.join('\n')
+    executeRun(entry.prompt, undefined, true, partialOutput)
   }
 
   // Reset reading panel and decision bar when module changes
@@ -1181,17 +1192,36 @@ export default function ModulePage() {
                             </div>
                           </div>
                         </div>
-                        <motion.button
-                          onClick={() => retryEntry(entry)}
-                          style={retryBtnStyle}
-                          whileHover={{ scale: 1.04, background: 'rgba(220, 38, 38, 0.08)' }}
-                          whileTap={{ scale: 0.96 }}
-                        >
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e05252" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-                          </svg>
-                          Try Again
-                        </motion.button>
+                        <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+                          <motion.button
+                            onClick={() => handleContinue(entry)}
+                            style={{
+                              ...retryBtnStyle,
+                              background: `${mod.accent}12`,
+                              borderColor: `${mod.accent}30`,
+                              color: mod.accent,
+                            }}
+                            whileHover={{ scale: 1.04, background: `${mod.accent}18` }}
+                            whileTap={{ scale: 0.96 }}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="13 17 18 12 13 7" /><polyline points="6 17 11 12 6 7" />
+                            </svg>
+                            Continue
+                          </motion.button>
+
+                          <motion.button
+                            onClick={() => retryEntry(entry)}
+                            style={retryBtnStyle}
+                            whileHover={{ scale: 1.04, background: 'rgba(220, 38, 38, 0.08)' }}
+                            whileTap={{ scale: 0.96 }}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e05252" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                            </svg>
+                            Try Again
+                          </motion.button>
+                        </div>
                       </motion.div>
                     )}
                   </div>
@@ -1973,6 +2003,8 @@ const PANEL_TITLES: Record<string, string> = {
   marketing: 'GTM Strategy',
   landing: 'Production Pipeline',
   feasibility: 'Feasibility Report',
+  'launch-autopilot': 'Launch Execution Plan',
+  'mvp-scalpel': 'MVP Scalpel Report',
 }
 
 function ReadingPanel({ moduleId, result, accent, onClose }: {
