@@ -78,6 +78,8 @@ export default function DashboardPage() {
         if (ventRes.ok) setVentures(await ventRes.json())
         const ideaData = ideaRes.ok ? await ideaRes.json() : null
         setIdea(ideaData?.idea ?? null)
+      } catch (err) {
+        console.error('Failed to load dashboard data:', err)
       } finally {
         setLoading(false)
       }
