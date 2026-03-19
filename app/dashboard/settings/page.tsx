@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
+import { BillingPanel } from '@/components/billing/BillingPanel'
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -11,6 +12,9 @@ interface SessionData {
   email: string
   name: string
   plan: string
+  planLabel?: string
+  creditsRemaining?: number
+  hasUnlimitedAccess?: boolean
 }
 
 interface ForgeSettings {
@@ -378,15 +382,27 @@ export default function SettingsPage() {
                   fontWeight: 700,
                   textTransform: 'uppercase',
                   letterSpacing: '0.04em',
-                  background: session?.plan === 'pro' ? 'var(--accent-soft)' : 'var(--glass-bg)',
-                  color: session?.plan === 'pro' ? 'var(--accent)' : 'var(--muted)',
-                  border: `1px solid ${session?.plan === 'pro' ? 'var(--accent-glow)' : 'var(--border)'}`,
+                  background: session?.hasUnlimitedAccess || (session?.plan && session.plan !== 'free') ? 'var(--accent-soft)' : 'var(--glass-bg)',
+                  color: session?.hasUnlimitedAccess || (session?.plan && session.plan !== 'free') ? 'var(--accent)' : 'var(--muted)',
+                  border: `1px solid ${session?.hasUnlimitedAccess || (session?.plan && session.plan !== 'free') ? 'var(--accent-glow)' : 'var(--border)'}`,
                 }}>
-                  {session?.plan === 'pro' ? 'Pro' : 'Free'} Plan
+                  {session?.planLabel || 'Free'} Plan
                 </div>
               </>
             )}
           </motion.div>
+
+          {/* ── Billing Section ── */}
+          <SectionHeader
+            icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>}
+            title="Billing"
+            description="Plans, credits, top-ups, and subscription management"
+            delay={0.08}
+          />
+
+          <div style={{ marginBottom: 32 }}>
+            <BillingPanel />
+          </div>
 
           {/* ── Agent Behavior Section ── */}
           <SectionHeader
