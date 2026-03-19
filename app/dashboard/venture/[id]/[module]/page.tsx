@@ -15,6 +15,7 @@ import { ResultCard } from '@/components/ui/ResultCard'
 import ReactMarkdown from 'react-markdown'
 import { getModuleCost } from '@/lib/billing'
 import { downloadPDFFromResult, downloadPDFFromElement } from '@/lib/client-pdf'
+import { resolveLandingComponent, stripGeneratedCodeFences } from '@/lib/landing-page'
 
 // ─── Module metadata (mirrors ModulePicker) ──────────────────────────────────
 
@@ -782,8 +783,14 @@ export default function ModulePage() {
 
   // Compute latest result for reading panel
   const latestResult = [...conversations].reverse().find(c => c.result && Object.keys(c.result).length > 0)?.result as Record<string, any> | null
+  const latestLandingResult = latestResult ? (latestResult.landing || latestResult) as Record<string, any> : null
   const landingFullComponent = activeModule === 'landing' && latestResult
-    ? (latestResult.landing?.fullComponent || latestResult.fullComponent || null) as string | null
+    ? resolveLandingComponent({
+        ventureName,
+        fullComponent: latestLandingResult?.fullComponent,
+        landingPageCopy: latestLandingResult?.landingPageCopy,
+        seoMetadata: latestLandingResult?.seoMetadata,
+      })
     : null
   const showLandingPreview = readingPanelOpen && landingFullComponent !== null
   const showReadingPanel = readingPanelOpen && latestResult !== null && activeModule !== 'general' && !showLandingPreview
@@ -2434,10 +2441,7 @@ function LandingPreviewPanel({ componentCode, result, ventureName, accent, devic
   const [iframeLoading, setIframeLoading] = useState(true)
   const [iframeKey, setIframeKey] = useState(0)
 
-  const clean = componentCode
-    .replace(/```(?:tsx|jsx|html|javascript|typescript)?\s*/gi, '')
-    .replace(/```\s*/g, '')
-    .trim()
+  const clean = stripGeneratedCodeFences(componentCode)
 
   const seo = result.landing?.seoMetadata || result.seoMetadata || {}
   const previewHtml = buildPreviewHtml(clean, seo, ventureName)
