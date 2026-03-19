@@ -4,7 +4,7 @@ export const maxDuration = 300
 
 import { requireAuth, AuthError, isAuthError } from '@/lib/auth'
 import { type BillingModuleId } from '@/lib/billing'
-import { BillingError, assertCanRunModule, recordUsageCharge } from '@/lib/billing-queries'
+import { BillingError, assertCanRunModule, assertHourlyRateLimit, recordUsageCharge } from '@/lib/billing-queries'
 import {
     getVenture,
     createConversation,
@@ -279,6 +279,11 @@ export async function POST(
         const billingCheck = isContinuation
             ? null
             : await assertCanRunModule(session.userId, moduleId as BillingModuleId)
+
+        // Rate limit: max N runs/hour per user (unlimited users exempt)
+        if (billingCheck) {
+            await assertHourlyRateLimit(session.userId, billingCheck.snapshot)
+        }
 
         const conversation = await createConversation(id, moduleId, prompt)
         if (billingCheck) {
