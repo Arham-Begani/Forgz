@@ -371,6 +371,37 @@ function formatMillions(val: any): string {
   return `$${n}`;
 }
 
+function parseMagnitudeValue(val: any): number {
+  if (val == null) return 0;
+  if (typeof val === "number") return Number.isFinite(val) ? val : 0;
+
+  const raw = String(val).trim();
+  if (!raw) return 0;
+
+  const normalized = raw.toLowerCase().replace(/,/g, "");
+  const numericMatch = normalized.match(/-?\d+(?:\.\d+)?/);
+  if (!numericMatch) return 0;
+
+  const base = parseFloat(numericMatch[0]);
+  if (!Number.isFinite(base)) return 0;
+
+  const compactSuffixMatch = normalized.match(/-?\d+(?:\.\d+)?\s*([kmbt])\b/);
+  if (compactSuffixMatch) {
+    const suffix = compactSuffixMatch[1];
+    if (suffix === "k") return base * 1_000;
+    if (suffix === "m") return base * 1_000_000;
+    if (suffix === "b") return base * 1_000_000_000;
+    if (suffix === "t") return base * 1_000_000_000_000;
+  }
+
+  if (/\b(thousand|k)\b/.test(normalized)) return base * 1_000;
+  if (/\b(million|mn|mm)\b/.test(normalized)) return base * 1_000_000;
+  if (/\b(billion|bn)\b/.test(normalized)) return base * 1_000_000_000;
+  if (/\b(trillion|tn)\b/.test(normalized)) return base * 1_000_000_000_000;
+
+  return base;
+}
+
 function ResearchDisplay({ result, onOpenReport }: { result: Record<string, any>; onOpenReport: (content: string) => void }) {
   const ACCENT = "#5A8C6E";
   const tamVal = result.research?.tam?.value ?? result.tam?.value ?? result.tam;
@@ -378,20 +409,23 @@ function ResearchDisplay({ result, onOpenReport }: { result: Record<string, any>
   const somVal = result.research?.som?.value ?? result.som?.value ?? result.som;
   const stringTam = typeof tamVal === 'object' ? JSON.stringify(tamVal) : String(tamVal || "");
 
-  function resultsToNumber(val: any): number {
-    if (!val) return 0;
-    const s = String(val).replace(/[^0-9.]/g, '');
-    return parseFloat(s) || 0;
+  const tamN = parseMagnitudeValue(tamVal) || 1200;
+  const samN = parseMagnitudeValue(samVal) || tamN * 0.35;
+  const somN = parseMagnitudeValue(somVal) || tamN * 0.08;
+
+  function formatPct(part: number, total: number): string {
+    if (!total || !Number.isFinite(total)) return "0%";
+    const rawPct = (part / total) * 100;
+    if (!Number.isFinite(rawPct) || rawPct <= 0) return "0%";
+    if (rawPct < 1) return "<1%";
+    if (rawPct < 10) return `${rawPct.toFixed(1)}%`;
+    return `${Math.round(rawPct)}%`;
   }
 
-  const tamN = resultsToNumber(tamVal) || 1200;
-  const samN = resultsToNumber(samVal) || tamN * 0.35;
-  const somN = resultsToNumber(somVal) || tamN * 0.08;
-
   const marketData = [
-    { segment: "TAM", value: tamN, pct: 100 },
-    { segment: "SAM", value: samN, pct: Math.round((samN / tamN) * 100) },
-    { segment: "SOM", value: somN, pct: Math.round((somN / tamN) * 100) },
+    { segment: "TAM", value: tamN, pctLabel: "100%" },
+    { segment: "SAM", value: samN, pctLabel: formatPct(samN, tamN) },
+    { segment: "SOM", value: somN, pctLabel: formatPct(somN, tamN) },
   ];
 
   const gradientId = "researchGrad";
@@ -483,10 +517,10 @@ function ResearchDisplay({ result, onOpenReport }: { result: Record<string, any>
               border: `1px solid ${ACCENT}20`,
             }}>
               <div style={{ fontSize: 9, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{d.segment}</div>
-              <div style={{ fontSize: 14, fontWeight: 800, color: ACCENT, lineHeight: 1.2, marginTop: 2 }}>{d.pct}%</div>
-            </div>
-          ))}
-        </div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: ACCENT, lineHeight: 1.2, marginTop: 2 }}>{d.pctLabel}</div>
+              </div>
+            ))}
+          </div>
       </motion.div>
 
       {result.researchPaper && (
@@ -608,16 +642,10 @@ function FeasibilityDisplay({ result, onOpenReport }: { result: Record<string, a
   const risks = result.risks || result.feasibility?.risks || [];
   const competitiveMoat = result.competitiveMoat || result.feasibility?.competitiveMoat;
 
-  function resultsToNumber(val: any): number {
-    if (!val) return 0;
-    const s = String(val).replace(/[^0-9.]/g, '');
-    return parseFloat(s) || 0;
-  }
-
   const chartData = [
-    { year: "Yr 1", Revenue: resultsToNumber(financialModel?.yearOne?.revenue) || 0, Costs: resultsToNumber(financialModel?.yearOne?.costs) || 0 },
-    { year: "Yr 2", Revenue: resultsToNumber(financialModel?.yearTwo?.revenue) || 0, Costs: resultsToNumber(financialModel?.yearTwo?.costs) || 0 },
-    { year: "Yr 3", Revenue: resultsToNumber(financialModel?.yearThree?.revenue) || 0, Costs: resultsToNumber(financialModel?.yearThree?.costs) || 0 },
+    { year: "Yr 1", Revenue: parseMagnitudeValue(financialModel?.yearOne?.revenue) || 0, Costs: parseMagnitudeValue(financialModel?.yearOne?.costs) || 0 },
+    { year: "Yr 2", Revenue: parseMagnitudeValue(financialModel?.yearTwo?.revenue) || 0, Costs: parseMagnitudeValue(financialModel?.yearTwo?.costs) || 0 },
+    { year: "Yr 3", Revenue: parseMagnitudeValue(financialModel?.yearThree?.revenue) || 0, Costs: parseMagnitudeValue(financialModel?.yearThree?.costs) || 0 },
   ];
 
   const timingColor = (marketTimingScore ?? 0) >= 7 ? "#16a34a" : (marketTimingScore ?? 0) >= 4 ? "#d97706" : "#dc2626";
