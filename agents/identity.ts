@@ -224,22 +224,24 @@ ${hasResearch
 Do not produce generic tech startup branding.
 Output the full IdentityOutput JSON at the end.`
 
+    const finalUserMessage = isContinuation
+        ? "Continue from where you left off. Do not repeat anything already outputted. Complete the IdentityOutput JSON strictly."
+        : userMessage
+
     const run = async () => {
         const model = getFlashModel()
-        let fullText = (history.find(h => h.role === 'model')?.parts[0] as any)?.text || ''
-
-        await streamPrompt(
+        const responseText = await streamPrompt(
             model,
             SYSTEM_PROMPT,
-            userMessage,
-            async (chunk) => {
-                fullText += chunk
-                await onStream(chunk)
-            },
+            finalUserMessage,
+            onStream,
             history
         )
 
-        const raw = extractJSON(fullText)
+        const partialOutput = (history.find(h => h.role === 'model')?.parts[0] as any)?.text || ''
+        const combinedText = isContinuation ? partialOutput + responseText : responseText
+
+        const raw = extractJSON(combinedText)
         const validated = IdentityOutputSchema.parse(raw)
         await onComplete(validated)
     }
