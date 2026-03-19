@@ -3,7 +3,7 @@ import { runIdentityAgent, IdentityOutput } from './identity'
 import { runPipelineAgent, PipelineOutput } from './pipeline'
 import { runFeasibilityAgent, FeasibilityOutput } from './feasibility'
 import { runContentAgent, ContentOutput } from './content'
-import { getProModelWithThinking, streamPrompt, Content } from '../lib/gemini'
+import { getProModelWithThinking, streamPrompt, withTimeout, withRetry, Content } from '../lib/gemini'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -30,31 +30,42 @@ export async function runFullLaunch(
 
   await onStream('=== Architect Agent: Planning your venture ===\n\n')
 
-  const architectModel = getProModelWithThinking(5000, 'gemini-3-pro-preview')
+  const architectModel = getProModelWithThinking(5000, 'models/gemini-3-pro-preview')
 
-  const architectPlanText = await streamPrompt(
-    architectModel,
-    `You are the Architect Agent — team lead for the Forge venture platform.
-     Your job is to analyse a venture concept and produce a brief task plan
-     for your five specialist agents: Genesis, Identity, Content Factory, Pipeline, Feasibility.
-     Be specific. Reference the venture concept in each agent brief.
-     Output a short task plan (under 300 words) then stop.
-     
-     IMPORTANT: Do not output any conversational text or "Thought Process" headers. Any step-by-step reasoning or thought process MUST be strictly wrapped inside <think> and </think> tags. Only the final output should be outside the <think> tags.`,
-    `Venture concept: ${venture.name}
+  const architectRun = async () => {
+    return await streamPrompt(
+      architectModel,
+      `You are the Architect Agent — team lead for the Forge venture platform.
+       Your job is to analyse a venture concept and produce a brief task plan
+       for your five specialist agents: Genesis, Identity, Content Factory, Pipeline, Feasibility.
+       Be specific. Reference the venture concept in each agent brief.
+       Output a short task plan (under 300 words) then stop.
+
+       IMPORTANT: Do not output any conversational text or "Thought Process" headers. Any step-by-step reasoning or thought process MUST be strictly wrapped inside <think> and </think> tags. Only the final output should be outside the <think> tags.`,
+      `Venture concept: ${venture.name}
 ${venture.globalIdea ? `Global Startup Vision: ${venture.globalIdea}\n` : ''}
-     Briefly plan what each agent should focus on for this specific venture.
-     Be concrete and specific to this idea — not generic instructions.`,
-    onStream,
-    history
-  )
+       Briefly plan what each agent should focus on for this specific venture.
+       Be concrete and specific to this idea — not generic instructions.`,
+      onStream,
+      history
+    )
+  }
+
+  let architectPlanText = ''
+  try {
+    architectPlanText = await withRetry(() => withTimeout(architectRun(), 90_000))
+  } catch (architectErr) {
+    const msg = architectErr instanceof Error ? architectErr.message : String(architectErr)
+    await onStream(`[Architect step skipped — ${msg}]\n\n`)
+    architectPlanText = `Proceed with full analysis of: ${venture.name}`
+  }
 
   await onStream('\n\n')
   venture = { ...venture, context: { ...venture.context, architectPlan: architectPlanText } }
 
   // ── STEP 1 — Genesis Engine ────────────────────────────────────────────────
 
-  await onAgentStatus('genesis', 'running')
+  await onAgentStatus('research', 'running')
   await onStream('=== Genesis Engine: Market Research ===\n\n')
 
   let genesisResult: GenesisOutput | null = null
@@ -65,12 +76,12 @@ ${venture.globalIdea ? `Global Startup Vision: ${venture.globalIdea}\n` : ''}
   }, depth, history)
 
   if (!genesisResult) throw new Error('Genesis agent failed to produce output')
-  await onAgentStatus('genesis', 'complete')
+  await onAgentStatus('research', 'complete')
   await onStream('\n\n')
 
   // ── STEP 2 — Identity Architect (requires Genesis) ─────────────────────────
 
-  await onAgentStatus('identity', 'running')
+  await onAgentStatus('branding', 'running')
   await onStream('=== Identity Architect: Brand Bible ===\n\n')
 
   let identityResult: IdentityOutput | null = null
@@ -81,7 +92,7 @@ ${venture.globalIdea ? `Global Startup Vision: ${venture.globalIdea}\n` : ''}
   }, history)
 
   if (!identityResult) throw new Error('Identity agent failed to produce output')
-  await onAgentStatus('identity', 'complete')
+  await onAgentStatus('branding', 'complete')
   await onStream('\n\n')
 
   // ── STEP 2.5 — Content Factory (requires Branding) ──────────────────────────
@@ -91,18 +102,23 @@ ${venture.globalIdea ? `Global Startup Vision: ${venture.globalIdea}\n` : ''}
 
   let marketingResult: ContentOutput | null = null
 
-  await runContentAgent(venture, onStream, async (result) => {
-    marketingResult = result
-    venture = { ...venture, context: { ...venture.context, marketing: result } }
-  }, history)
+  try {
+    await runContentAgent(venture, onStream, async (result) => {
+      marketingResult = result
+      venture = { ...venture, context: { ...venture.context, marketing: result } }
+    }, history)
 
-  if (!marketingResult) throw new Error('Marketing agent failed to produce output')
-  await onAgentStatus('marketing', 'complete')
+    if (!marketingResult) throw new Error('Marketing agent produced no output')
+    await onAgentStatus('marketing', 'complete')
+  } catch (marketingErr) {
+    await onAgentStatus('marketing', 'failed')
+    await onStream('\n[Content Factory failed: ' + (marketingErr instanceof Error ? marketingErr.message : String(marketingErr)) + ']\n')
+  }
   await onStream('\n\n')
 
   // --- STEP 3 — Pipeline + Feasibility in PARALLEL ---------------------------
 
-  await onAgentStatus('pipeline', 'running')
+  await onAgentStatus('landing', 'running')
   await onAgentStatus('feasibility', 'running')
   await onStream('=== Finalizing Production Pipeline & Strategic Validation ===\n\n')
 
@@ -142,9 +158,9 @@ ${venture.globalIdea ? `Global Startup Vision: ${venture.globalIdea}\n` : ''}
 
   if (landingSettled.status === 'fulfilled') {
     landingResult = landingSettled.value
-    await onAgentStatus('pipeline', 'complete')
+    await onAgentStatus('landing', 'complete')
   } else {
-    await onAgentStatus('pipeline', 'failed')
+    await onAgentStatus('landing', 'failed')
     await onStream('\n[Landing Page failed: ' + (landingSettled.reason as Error)?.message + ']\n')
   }
 
@@ -164,7 +180,7 @@ ${venture.globalIdea ? `Global Startup Vision: ${venture.globalIdea}\n` : ''}
   await onComplete({
     research: genesisResult,
     branding: identityResult,
-    marketing: marketingResult,
+    marketing: (marketingResult ?? {}) as ContentOutput,
     landing: (landingResult ?? {}) as PipelineOutput,
     feasibility: (feasibilityResult ?? {}) as FeasibilityOutput,
   })

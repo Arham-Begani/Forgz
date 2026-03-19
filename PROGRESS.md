@@ -194,4 +194,49 @@ This file is the Agent's memory between sessions.
     - Improved `agents/shadow.ts` robustness with a defensive `ShadowBoardSchema.parse(raw || {})` call to prevent UI crashes if the model fails to output valid JSON.
     - Optimized `shadow.ts` execution loop: refactored `withRetry` around `withTimeout` to guarantee each retry attempt has its own dedicated 120s window.
     - Hardened the `runShadowBoard` system prompt to better enforce the final JSON structure and persona consistency.
-**Next:** Test the Shadow Board with various venture concepts to verify long-thinking-step completions.
+**Next:** Test the Shadow Board with various venture concepts to verify long-thinking-step completions.
+
+### Day 12 — March 17, 2026
+**Goal:** Build Cohort Mode — run 2-3 venture variants from the same idea and compare them.
+**Built:**
+- **Step 1:** `db/migrations/005_cohorts.sql` — Cohorts table with status FSM (draft/running/comparing/complete), variant_ids array, winner_id, and comparison JSONB.
+- **Step 2:** `lib/queries.ts` — Added 7 cohort helpers: getCohortsByUser, getCohortById, createCohort, updateCohortVariants, updateCohortStatus, updateCohortComparison, setCohortWinner.
+- **Step 3:** `agents/variant-generator.ts` — Flash agent that takes a core idea and generates 2-3 maximally different business model variants (Zod-validated).
+- **Step 4:** `agents/cohort-comparator.ts` — Pro model + thinking agent that compares 2-3 completed ventures across 6-8 dimensions, scores them, and picks a winner with rationale.
+- **Step 5:** `app/api/cohorts/route.ts` — GET (list cohorts) + POST (create cohort) with auth + Zod validation.
+- **Step 6:** `app/api/cohorts/[id]/route.ts` — GET cohort + full venture data for each variant.
+- **Step 7:** `app/api/cohorts/[id]/generate-variants/route.ts` — POST triggers Variant Generator, creates ventures, updates cohort, streams via SSE.
+- **Step 8:** `app/api/cohorts/[id]/launch/route.ts` — POST triggers Full Launch on all variants (sequential or parallel), then auto-runs Comparison Agent, streams progress via SSE.
+- **Step 9:** `app/api/cohorts/[id]/pick-winner/route.ts` — POST picks a winner from variant_ids.
+- **Step 10:** `app/dashboard/cohort/new/page.tsx` — Cohort creation UI with manual variant definition or AI generation, launch button.
+- **Step 11:** `app/dashboard/cohort/[id]/page.tsx` — Cohort dashboard with variant progress cards, comparison matrix table, recommended winner card, runner-up case, hybrid possibility, strategic analysis, pick-winner buttons, winner crown.
+- **Step 12:** `app/dashboard/layout.tsx` — Added COHORTS section in sidebar below Projects with status badges, New Cohort button, cohort list with navigation.
+**Broken:** None. All existing features preserved.
+**Next:** Run `005_cohorts.sql` migration in DB console. Test cohort creation flow end-to-end.
+
+### Day 13 — March 18, 2026
+**Goal:** Eliminate unhandled `TypeError: Failed to fetch` runtime crashes in dashboard surfaces.
+**Built:**
+- Added defensive `try/catch` guards around initial data-loading fetch flows in `app/dashboard/page.tsx`, `app/dashboard/layout.tsx`, and `app/dashboard/manage/page.tsx` so transient/network fetch failures no longer throw uncaught runtime errors.
+- Refactored initial project fetch in `app/dashboard/project/[id]/page.tsx` from a `.then()` chain to an async guarded loader with explicit error handling and stable loading-state finalization.
+- Hardened cohort bootstrap fetch in `app/dashboard/cohort/[id]/page.tsx` with catch logging so cohort page initialization fails gracefully instead of bubbling an unhandled exception.
+- Verified app integrity with `npm run build` (successful compile, type check, and route generation).
+**Broken:** None observed in build verification.
+**Next:** Validate these fetch-failure fallbacks manually in browser devtools (offline/throttled mode) and add user-facing toast/error banners where useful.
+
+### Day 14 — March 19, 2026
+**Goal:** Fix Full Launch "Agent run failed" error — make orchestrator bulletproof.
+**Root causes found:**
+1. Architect step (Pro model) used `'gemini-3-pro-preview'` without `models/` prefix — inconsistent with flash model format; any API error here killed the entire launch.
+2. Content Factory step threw hard on failure (`throw new Error`) — killing Full Launch instead of gracefully continuing.
+3. `withTimeout(withRetry(fn))` ordering — one shared timeout for the entire retry sequence instead of per-attempt.
+4. Agent status keys sent to UI were wrong (`'genesis'`, `'identity'`, `'pipeline'`) — didn't match UI tracker keys (`'research'`, `'branding'`, `'landing'`), so progress bars never updated.
+**Fixed:** `agents/orchestrator.ts`
+- Fixed model name: `'models/gemini-3-pro-preview'` (consistent with gemini.ts default)
+- Wrapped Architect step in try/catch — if Pro model fails, Full Launch logs the skip and continues with a fallback plan string
+- Fixed retry/timeout nesting: `withRetry(() => withTimeout(architectRun(), 90_000))` — each retry gets its own 90s window
+- Made Content Factory resilient: wrapped in try/catch with `onAgentStatus('marketing', 'failed')` instead of throwing
+- Fixed `onComplete` to handle null marketing result gracefully: `(marketingResult ?? {}) as ContentOutput`
+- Fixed agent status keys to match UI: `'research'`, `'branding'`, `'landing'` (not `'genesis'`, `'identity'`, `'pipeline'`)
+**Result:** Full Launch now completes end-to-end even if Architect or Content Factory fail. Research + Branding are still required minimums.
+**Broken:** None. TypeScript clean (0 errors). All other modules unaffected.
