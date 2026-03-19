@@ -132,27 +132,25 @@ Provide the final verdict and the board dialogue. Be brutal.`
 
     const runAgentAction = async () => {
         const model = getProModelWithThinking(10000)
-        let fullText = (history.find(h => h.role === 'model')?.parts[0] as any)?.text || ''
-
-        await streamPrompt(
+        const responseText = await streamPrompt(
             model,
             SYSTEM_PROMPT,
             finalUserMessage,
-            async (chunk) => {
-                fullText += chunk
-                await onStream(chunk)
-            },
+            onStream,
             history
         )
 
         try {
-            const raw = extractJSON(fullText)
-            // Use defaults if parsing fails completely, rather than crashing
+            // Combine previous partial output with new response if continuing
+            const partialOutput = (history.find(h => h.role === 'model')?.parts[0] as any)?.text || ''
+            const combinedText = isContinuation ? partialOutput + responseText : responseText
+            
+            const raw = extractJSON(combinedText)
             const validated = ShadowBoardSchema.parse(raw || {})
             await onComplete(validated)
         } catch (e) {
             console.error('ShadowBoard JSON Parse Error:', e)
-            throw new Error('Failed to generate valid board verdict. Please try again.')
+            throw new Error(`Failed to generate valid board verdict: ${e instanceof Error ? e.message : String(e)}`)
         }
     }
 
@@ -160,7 +158,7 @@ Provide the final verdict and the board dialogue. Be brutal.`
     await withRetry(
         () => withTimeout(
             runAgentAction(),
-            Number(process.env.AGENT_TIMEOUT_MS ?? 120000)
+            180000 // 180s timeout specifically for Shadow Board
         ),
         1 // 1 retry = 2 attempts total
     )
