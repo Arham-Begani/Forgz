@@ -93,6 +93,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [dark, setDark] = useState(false)
+  const [theme, setTheme] = useState('amber')
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -117,6 +118,31 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     if (next) document.documentElement.classList.add('dark')
     else document.documentElement.classList.remove('dark')
   }
+
+  // ─── Theme ────────────────────────────────────────────────────────────────
+  const THEME_IDS = ['amber', 'ocean', 'forest', 'rose', 'slate', 'violet']
+
+  function applyTheme(id: string) {
+    const root = document.documentElement
+    THEME_IDS.forEach(t => root.classList.remove(`theme-${t}`))
+    if (id !== 'amber') root.classList.add(`theme-${id}`)
+    setTheme(id)
+    localStorage.setItem('forge-theme', id)
+  }
+
+  useEffect(() => {
+    const stored = localStorage.getItem('forge-theme') || 'amber'
+    applyTheme(stored)
+  }, [])
+
+  useEffect(() => {
+    function handleThemeChange(e: Event) {
+      const { themeId } = (e as CustomEvent).detail
+      applyTheme(themeId)
+    }
+    window.addEventListener('forge:theme-changed', handleThemeChange)
+    return () => window.removeEventListener('forge:theme-changed', handleThemeChange)
+  }, [])
 
   // ─── Data loading ─────────────────────────────────────────────────────────
   useEffect(() => {
