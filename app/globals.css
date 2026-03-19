@@ -575,6 +575,25 @@ button, a {
   width: 380px;
 }
 
+/* ─── Landing Preview Panel ─────────────────────────────────────────────── */
+.landing-preview-panel {
+  width: 520px;
+}
+.landing-preview-panel .preview-iframe-wrap {
+  transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.landing-preview-panel .preview-code-view {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  line-height: 1.65;
+  tab-size: 2;
+  color: var(--text-soft);
+  white-space: pre;
+  overflow: auto;
+  padding: 20px;
+  margin: 0;
+}
+
 /* ─── Document Markdown Formatting ─────────────────────────────────────── */
 
 .doc-markdown h1 { font-size: 1.4em; font-weight: 800; color: var(--text); margin: 1.2em 0 0.5em; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
@@ -630,11 +649,29 @@ button, a {
     z-index: 20;
     box-shadow: var(--shadow-xl);
   }
+  .landing-preview-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 480px;
+    z-index: 20;
+    box-shadow: var(--shadow-xl);
+  }
 }
 
 /* Mobile */
 @media (max-width: 768px) {
   .reading-panel {
+    width: 100%;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 20;
+    box-shadow: none;
+  }
+  .landing-preview-panel {
     width: 100%;
     position: absolute;
     top: 0;
