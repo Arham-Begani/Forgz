@@ -158,19 +158,21 @@ Generate a COMPLETE, production-quality landing page as a single React functiona
 - Smooth scroll navigation between sections
 - Accessible (proper heading hierarchy, aria-labels on interactive elements, contrast ratios)
 
-**Design Requirements:**
-- Use the EXACT brand colors from the Identity output (primary, secondary, accent)
-- Use the brand typography feel (if the brand is modern, use clean sans-serif; if premium, use serif accents)
-- Include a sticky navigation bar with logo text and section links
-- Hero section with gradient background using brand colors, animated elements
-- Features grid with icon cards, hover effects, and staggered layout
-- Social proof section with testimonial cards
-- Pricing table with highlighted recommended tier
-- FAQ section with expandable accordion items (use useState)
-- Footer with links, social icons, and copyright
-- Lead capture form in the hero AND as a standalone section before footer
-- Subtle animations: fade-in on scroll effects using IntersectionObserver
-- Professional spacing, consistent border-radius, shadow hierarchy
+**Design Requirements (aim for Stripe / Linear / Vercel quality):**
+- Use the EXACT brand colors from the Identity output as CSS custom properties in a style tag (--color-primary, --color-secondary, --color-accent)
+- Dark hero section with gradient using brand colors — avoid plain white heroes; use deep backgrounds with vibrant gradient overlays
+- Glassmorphism feature cards: bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl — creates premium feel
+- Sticky navigation bar: semi-transparent background (bg-white/80 dark backdrop-blur-xl), logo, nav links, and a CTA button
+- Hero: full-viewport-height gradient section, large bold headline (text-5xl md:text-7xl), animated gradient text on the key benefit phrase, floating accent shapes as decorative elements using absolute positioning
+- Feature cards: icon in a colored rounded square, title in semibold, description in muted text, hover:scale-105 hover:shadow-xl transition-all duration-300
+- Testimonial cards: quote marks as decorative elements, avatar initials in branded colored circles, star ratings
+- Pricing: dark recommended tier card with ring-2 ring-[brand-accent] scale-105 relative, "Most Popular" badge using absolute top-0 translate-y-[-50%]
+- FAQ accordion: smooth max-height transition (not display:none/block), chevron rotation on open
+- Section transitions: alternating light/dark backgrounds for visual rhythm
+- Typography: tight tracking on headings (tracking-tight), generous line-height on body, all-caps small label above major headings (text-xs uppercase tracking-widest opacity-60)
+- Professional spacing: py-24 between sections, max-w-7xl container, px-4 sm:px-6 lg:px-8
+- Subtle animations: fade-in + slide-up on scroll using IntersectionObserver, staggered delays on feature cards using inline style animationDelay of 0.1s per index
+- Shadow hierarchy: shadow-sm on inputs, shadow-lg on cards, shadow-2xl on modals/CTAs
 
 **Lead Capture Form:**
 - Email input with field validation (basic regex)
@@ -179,7 +181,15 @@ Generate a COMPLETE, production-quality landing page as a single React functiona
 - Form submits to "#" with preventDefault (demo mode)
 - Store submissions in component state with success feedback
 
-**The fullComponent string must be the COMPLETE component code, starting with "function LandingPage()" or "const LandingPage = () =>" and ending with the closing brace. Include ALL sections: nav, hero, features, social proof, pricing, FAQ, CTA, and footer.**
+**Forge Watermark (Required — always include this):**
+Include a fixed-position badge in the bottom-right corner of every page. This is non-negotiable:
+```
+<a href="https://tryforge.ai" target="_blank" rel="noopener noreferrer" style={{position:'fixed',bottom:'20px',right:'20px',zIndex:9999,display:'flex',alignItems:'center',gap:'6px',background:'rgba(0,0,0,0.85)',color:'white',fontSize:'11px',fontWeight:'500',padding:'7px 14px',borderRadius:'20px',textDecoration:'none',backdropFilter:'blur(10px)',boxShadow:'0 2px 12px rgba(0,0,0,0.3)',letterSpacing:'0.02em'}}>
+  ⚡ Built with Forge
+</a>
+```
+
+**The fullComponent string must be the COMPLETE component code, starting with "function LandingPage()" or "const LandingPage = () =>" and ending with the closing brace. Include ALL sections: nav, hero, features, social proof, pricing, FAQ, CTA, footer, and watermark badge.**
 
 ### 4. Tech Stack & Infrastructure Detail
 The landing page is built with:
@@ -263,9 +273,86 @@ export async function runPipelineAgent(
     const contextParts: string[] = []
     if (venture.context?.architectPlan) contextParts.push(`## Architect's Plan\n${venture.context.architectPlan}`)
     if (venture.globalIdea) contextParts.push(`## Global Startup Vision\n${venture.globalIdea}`)
-    if (hasResearch) contextParts.push(`## Research Findings (use these for positioning, pain points, pricing, and FAQ)\n${JSON.stringify(venture.context.research, null, 2)}`)
-    if (hasBranding) contextParts.push(`## Brand Identity (use these EXACT colors, voice, and tone in all copy and design)\n${JSON.stringify(venture.context.branding, null, 2)}`)
-    if (venture.context.marketing) contextParts.push(`## Marketing Strategy (use these messaging angles)\n${JSON.stringify(venture.context.marketing, null, 2)}`)
+
+    // Research — extract structured design tokens instead of raw JSON dump
+    if (hasResearch) {
+        const r = venture.context.research as Record<string, any>
+        const lines: string[] = []
+        if (r.marketSummary) lines.push(`Market: ${r.marketSummary}`)
+        const tam = r.tam?.value || (typeof r.tam === 'string' ? r.tam : '')
+        if (tam) lines.push(`TAM: ${tam}`)
+        if (r.targetAudience || r.targetCustomer) lines.push(`Target customer: ${r.targetAudience || r.targetCustomer}`)
+        if (r.competitorGap) lines.push(`Market gap: ${r.competitorGap}`)
+        if (Array.isArray(r.painPoints) && r.painPoints.length > 0) {
+            const pains = r.painPoints.slice(0, 5).map((p: any, i: number) => {
+                const desc = typeof p === 'object' ? (p.description || p.name || JSON.stringify(p)) : String(p)
+                return `  ${i + 1}. ${desc}`
+            })
+            lines.push(`Pain points (hero headline must address #1):\n${pains.join('\n')}`)
+        }
+        if (Array.isArray(r.competitors) && r.competitors.length > 0) {
+            const comps = r.competitors.slice(0, 5).map((c: any) => {
+                const name = typeof c === 'object' ? (c.name || JSON.stringify(c)) : String(c)
+                const weakness = typeof c === 'object' ? (c.weakness || c.gap || '') : ''
+                return `  - ${name}${weakness ? `: weakness = "${weakness}"` : ''}`
+            })
+            lines.push(`Competitors (name them in features & FAQ):\n${comps.join('\n')}`)
+        }
+        if (Array.isArray(r.topConcepts) && r.topConcepts.length > 0) {
+            const concepts = r.topConcepts.slice(0, 3).map((c: any) =>
+                `  - ${typeof c === 'object' ? (c.name || '') : String(c)}: ${typeof c === 'object' ? (c.rationale || '') : ''}`
+            )
+            lines.push(`Top product concepts:\n${concepts.join('\n')}`)
+        }
+        contextParts.push(`## Research Findings (use for positioning, pain points, pricing, and FAQ)\n${lines.join('\n')}`)
+    }
+
+    // Branding — extract design tokens explicitly
+    if (hasBranding) {
+        const b = venture.context.branding as Record<string, any>
+        const lines: string[] = []
+        if (b.brandName) lines.push(`Brand name: ${b.brandName}`)
+        if (b.tagline) lines.push(`Tagline: "${b.tagline}"`)
+        if (b.brandArchetype) lines.push(`Archetype: ${b.brandArchetype}`)
+        if (b.toneOfVoice || b.brandVoice) lines.push(`Tone of voice: ${b.toneOfVoice || b.brandVoice}`)
+        if (b.missionStatement) lines.push(`Mission: ${b.missionStatement}`)
+        if (Array.isArray(b.colorPalette) && b.colorPalette.length > 0) {
+            const colors = b.colorPalette.slice(0, 6).map((c: any) => {
+                if (typeof c === 'string') return c
+                const hex = c.hex || c.code || ''
+                const name = c.name || c.role || ''
+                return hex ? `${name ? name + ': ' : ''}${hex}` : (name || JSON.stringify(c))
+            }).filter(Boolean)
+            lines.push(`COLOR PALETTE (use these EXACT hex values for backgrounds, text, and accents):\n  ${colors.join('\n  ')}`)
+        }
+        if (b.typography || b.fonts) {
+            const typo = typeof (b.typography || b.fonts) === 'object'
+                ? JSON.stringify(b.typography || b.fonts)
+                : String(b.typography || b.fonts)
+            lines.push(`Typography: ${typo}`)
+        }
+        if (Array.isArray(b.brandPersonality) && b.brandPersonality.length > 0) {
+            lines.push(`Brand personality: ${b.brandPersonality.join(', ')}`)
+        }
+        contextParts.push(`## Brand Identity (apply EXACT colors, voice, and tone to all copy and design)\n${lines.join('\n')}`)
+    }
+
+    // Marketing — extract key messaging angles
+    if (venture.context.marketing) {
+        const m = venture.context.marketing as Record<string, any>
+        const lines: string[] = []
+        const gtm = m.gtmStrategy || m
+        if (gtm.overview) lines.push(`GTM: ${gtm.overview}`)
+        const channels = gtm.channels || m.channels
+        if (Array.isArray(channels) && channels.length > 0) {
+            lines.push(`Channels: ${channels.slice(0, 5).map((c: any) => typeof c === 'object' ? (c.name || JSON.stringify(c)) : String(c)).join(', ')}`)
+        }
+        if (Array.isArray(m.emailSequence) && m.emailSequence.length > 0) {
+            const subjects = m.emailSequence.slice(0, 3).map((e: any) => typeof e === 'object' ? (e.subject || e.title) : String(e))
+            lines.push(`Email subjects: ${subjects.join(' | ')}`)
+        }
+        if (lines.length > 0) contextParts.push(`## Marketing Strategy (use these messaging angles)\n${lines.join('\n')}`)
+    }
 
     const isContinuation = history.length > 0
     const userMessage = isContinuation
