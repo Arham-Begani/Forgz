@@ -498,6 +498,34 @@ export async function assertCanRunModule(userId: string, moduleId: BillingModule
   return { snapshot, requiredCredits }
 }
 
+// ── HTTP-level rate limiter ────────────────────────────────────────────────
+// Counts usage_charges in the last hour (server-side, DB-backed — works on
+// Vercel Edge/serverless where in-memory state doesn't persist).
+// Unlimited users are exempt. Continuation runs are exempt (no charge recorded).
+export async function assertHourlyRateLimit(userId: string, snapshot: BillingSnapshot, db?: DbClient): Promise<void> {
+  if (snapshot.hasUnlimitedAccess) return
+
+  const client = db ?? await createDb()
+  const windowStart = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+  const limit = Math.max(1, Number(process.env.RATE_LIMIT_RUNS_PER_HOUR ?? 10))
+
+  const { count, error } = await client
+    .from('usage_charges')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .gte('created_at', windowStart)
+
+  if (error) return // fail open — don't block users if DB check fails
+
+  if ((count ?? 0) >= limit) {
+    throw new BillingError(
+      `Rate limit reached: maximum ${limit} module runs per hour. Try again shortly.`,
+      429,
+      'rate_limit_exceeded'
+    )
+  }
+}
+
 export async function assertCanCreateVenture(userId: string, db?: DbClient) {
   const snapshot = await getBillingSnapshot(userId, db)
   if (snapshot.hasUnlimitedAccess) {
