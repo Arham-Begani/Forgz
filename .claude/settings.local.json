@@ -23,7 +23,8 @@
       "Bash(grep:*)",
       "Bash(find /c/Users/arham/Documents/Github/Forge -type f \\\\\\(-name *.log -o -name *error* -o -name *debug* \\\\\\))",
       "Bash(find /c/Users/arham/Documents/Github/Forge -type f -name .env*)",
-      "Bash(npm ls:*)"
+      "Bash(npm ls:*)",
+      "Bash(vercel:*)"
     ]
   }
 }
