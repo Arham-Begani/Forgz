@@ -4,6 +4,8 @@ import {
     streamPrompt,
     extractJSON,
     withTimeout,
+    withRetry,
+    Content,
 } from '@/lib/gemini'
 
 // ── Launch Autopilot Output Schema ──────────────────────────────────────────
@@ -120,6 +122,7 @@ export async function runLaunchAutopilotAgent(
     venture: VentureInput,
     onStream: (chunk: string) => Promise<void>,
     onComplete: (result: LaunchAutopilotOutput) => Promise<void>,
+    history: Content[] = []
 ): Promise<void> {
     const model = getFlashModel()
 
@@ -153,7 +156,10 @@ export async function runLaunchAutopilotAgent(
         contextParts.push(`Landing Page (REFERENCE THIS URL AND COPY IN ALL TASKS):\n${JSON.stringify(landingSummary, null, 2)}`)
     }
 
-    const userMessage = `Generate a complete 14-day launch execution calendar for this venture.
+    const isContinuation = history.length > 0
+    const finalUserMessage = isContinuation
+        ? "Continue from where you left off. Do not repeat anything already outputted. Complete the LaunchAutopilotOutput JSON object strictly."
+        : `Generate a complete 14-day launch execution calendar for this venture.
 
 Venture: ${venture.name}
 
@@ -162,17 +168,21 @@ ${contextParts.join('\n\n')}
 Produce the complete LaunchAutopilotOutput JSON. Every task MUST include exactCopy — the literal text to paste. No placeholders like "write about X".`
 
     const run = async () => {
-        const fullText = await streamPrompt(
+        const responseText = await streamPrompt(
             model,
             SYSTEM_PROMPT,
-            userMessage,
+            finalUserMessage,
             onStream,
+            history
         )
 
-        const raw = extractJSON(fullText)
+        const partialOutput = (history.find(h => h.role === 'model')?.parts[0] as any)?.text || ''
+        const combinedText = isContinuation ? partialOutput + responseText : responseText
+
+        const raw = extractJSON(combinedText)
         const validated = LaunchAutopilotSchema.parse(raw)
         await onComplete(validated)
     }
 
-    await withTimeout(run(), 90_000)
+    await withTimeout(withRetry(run), 180_000)
 }
