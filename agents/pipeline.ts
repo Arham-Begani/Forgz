@@ -182,12 +182,7 @@ Generate a COMPLETE, production-quality landing page as a single React functiona
 - Store submissions in component state with success feedback
 
 **Forge Watermark (Required — always include this):**
-Include a fixed-position badge in the bottom-right corner of every page. This is non-negotiable:
-```
-<a href="https://tryforge.ai" target="_blank" rel="noopener noreferrer" style={{position:'fixed',bottom:'20px',right:'20px',zIndex:9999,display:'flex',alignItems:'center',gap:'6px',background:'rgba(0,0,0,0.85)',color:'white',fontSize:'11px',fontWeight:'500',padding:'7px 14px',borderRadius:'20px',textDecoration:'none',backdropFilter:'blur(10px)',boxShadow:'0 2px 12px rgba(0,0,0,0.3)',letterSpacing:'0.02em'}}>
-  ⚡ Built with Forge
-</a>
-```
+Include a fixed-position "Built with Forge" badge in the bottom-right corner. Place it as the LAST element inside the returned JSX, before the final closing tag. Use these exact inline styles: position fixed, bottom 20px, right 20px, zIndex 9999, display flex, alignItems center, gap 6px, background rgba(0,0,0,0.85), color white, fontSize 11px, fontWeight 500, padding 7px 14px, borderRadius 20px, textDecoration none, backdropFilter blur(10px), boxShadow 0 2px 12px rgba(0,0,0,0.3). The link should open https://tryforge.ai in a new tab. The label should be "⚡ Built with Forge".
 
 **The fullComponent string must be the COMPLETE component code, starting with "function LandingPage()" or "const LandingPage = () =>" and ending with the closing brace. Include ALL sections: nav, hero, features, social proof, pricing, FAQ, CTA, footer, and watermark badge.**
 
