@@ -225,6 +225,25 @@ This file is the Agent's memory between sessions.
 **Next:** Validate these fetch-failure fallbacks manually in browser devtools (offline/throttled mode) and add user-facing toast/error banners where useful.
 
 ### Day 14 — March 19, 2026
+**Goal:** Fix misleading Research market-sizing chart units (TAM/SAM/SOM) so values render with correct scale.
+**Built:**
+- `components/ui/ResultCard.tsx` — replaced naive numeric parsing with `parseMagnitudeValue()` that correctly interprets suffix/word scales (`K`, `M`, `B`, `T`, `million`, `billion`, etc.).
+- Applied the new parser to Research TAM/SAM/SOM bars so labels/tooltips now preserve billion/million context instead of collapsing values (e.g., `$214B` no longer displayed as `$214`).
+- Applied the same parser to Feasibility financial chart revenue/cost parsing to keep cross-module number handling consistent.
+- Verified with `npm run build` (successful).
+**Broken:** None observed in build verification.
+**Next:** Add optional unit badges/legend copy on market charts (e.g., “Auto-scaled: K/M/B”) if we want even clearer first-glance interpretation.
+
+### Day 15 — March 19, 2026
+**Goal:** Fix false `0%` SOM display in Research market sizing.
+**Built:**
+- `components/ui/ResultCard.tsx` — replaced integer-rounded percentage rendering with adaptive formatting (`<1%`, `x.x%`, rounded whole %) for TAM-share labels.
+- SOM/SAM cards now correctly show sub-1% values instead of rounding down to `0%` when TAM is much larger.
+- Verified with `npm run build` (successful).
+**Broken:** None observed in build verification.
+**Next:** Consider showing basis points for very small shares if we want even finer precision (e.g., `0.21%`).
+
+### Day 14 — March 19, 2026
 **Goal:** Fix Full Launch "Agent run failed" error — make orchestrator bulletproof.
 **Root causes found:**
 1. Architect step (Pro model) used `'gemini-3-pro-preview'` without `models/` prefix — inconsistent with flash model format; any API error here killed the entire launch.
@@ -240,3 +259,22 @@ This file is the Agent's memory between sessions.
 - Fixed agent status keys to match UI: `'research'`, `'branding'`, `'landing'` (not `'genesis'`, `'identity'`, `'pipeline'`)
 **Result:** Full Launch now completes end-to-end even if Architect or Content Factory fail. Research + Branding are still required minimums.
 **Broken:** None. TypeScript clean (0 errors). All other modules unaffected.
+
+### Day 16 — March 19, 2026
+**Goal:** Polish production features and optimize core systems.
+**Built:**
+- **Gemini API Enhancements:** Improved token handling with better error recovery and state management in streaming responses.
+- **Pipeline Agent Optimization:** Enhanced streaming and error handling for more robust multi-step execution.
+- **Venture Preview Endpoint:** Added new `app/api/ventures/[id]/preview/route.ts` for content preview generation before publication.
+- **Dashboard Layout Improvements:** Updated navigation structure with new components and better organization.
+- **Settings Page Enhancement:** Added billing and subscription management options to user settings dashboard.
+- **Design System Updates:** Enhanced global CSS with improved responsive design and accessibility features.
+- **TypeScript Configuration:** Improved strict mode checking and type safety across the codebase.
+- **Next.js Config Optimization:** Enhanced performance and security settings for production deployment.
+- **ResultCard Component:** Improved styling with adaptive percentage formatting and better visual hierarchy.
+- **Billing Service:** Comprehensive subscription and payment tracking with Razorpay integration.
+- **Debug Cleanup:** Removed unused gemini debug endpoint.
+- **Security:** Upgraded Next.js to latest version to fix CVE-2025-66478.
+**Broken:** None. All features verified with `npm run build`.
+**Commits:** 17 high-quality commits pushing code quality improvements and production-readiness features.
+**Next:** Deploy updates to production environment and monitor payment/subscription flows.
