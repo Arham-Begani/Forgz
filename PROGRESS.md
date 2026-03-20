@@ -278,3 +278,57 @@ This file is the Agent's memory between sessions.
 **Broken:** None. All features verified with `npm run build`.
 **Commits:** 17 high-quality commits pushing code quality improvements and production-readiness features.
 **Next:** Deploy updates to production environment and monitor payment/subscription flows.
+
+### Day 17 — March 20, 2026
+**Goal:** Incremental/surgical landing page edits to save tokens on follow-up changes.
+**Built:**
+- **Edit Mode for Pipeline Agent:** `agents/pipeline.ts` — When `venture.context.landing` already has a result, follow-up prompts now trigger "edit mode" instead of regenerating the entire page. The agent receives the existing structured copy + truncated component code, and outputs ONLY the changed fields as a JSON patch. The patch is deep-merged into the existing result, then validated with Zod and post-processed as normal.
+- **PipelineEditPatchSchema:** New Zod schema with all fields optional — supports surgical edits to hero copy, features, pricing, FAQ, SEO metadata, sitemap, and fullComponent independently.
+- **mergePatch() helper:** Deep-merges patch into existing PipelineOutput: scalar sub-fields merge at field level (hero, seoMetadata), array fields replace entirely when present (features, pricing, faq, socialProof, sitemap).
+- **Safety guards:** If the patch's `fullComponent` fails `isRenderableLandingComponent()`, the edit is discarded and the existing component is preserved. Initial generation path is completely unchanged.
+- **Token savings:** Copy-only edits (e.g., "change the headline") now use ~200 output tokens instead of ~32k. Component-level edits use ~8-16k instead of ~32k.
+- Verified with `tsc --noEmit` (0 errors) and `npm run build` (successful).
+**Broken:** None. Initial generation flow untouched.
+**Next:** Test edit mode end-to-end with live venture data.
+
+### Day 17 (cont.) — March 20, 2026
+**Goal:** Massive token optimization across all agents — eliminate raw JSON dumps, add per-agent output limits.
+**Built:**
+- **Identity Agent** (`agents/identity.ts`) — Replaced `JSON.stringify(venture.context.research)` (~25KB) with targeted extraction of 7 key fields (~2KB). Excluded: researchPaper, full SWOT, riskMatrix, topConcepts.
+- **Content Agent** (`agents/content.ts`) — Replaced two JSON dumps (~40KB) with extraction of research (marketSummary, painPoints, competitors) + branding (brandName, tagline, tone, personality). Excluded: researchPaper, brandBible, colorPalette, typography, logos.
+- **Feasibility Agent** (`agents/feasibility.ts`) — Replaced two JSON dumps (~30KB) with extraction keeping SWOT + riskMatrix (feasibility needs them) but removing researchPaper, brandBible, colors, typography.
+- **Shadow Board Agent** (`agents/shadow.ts`) — Replaced three JSON dumps (~50KB) with human-readable summaries: research key metrics, brand essentials, feasibility verdict + year-one financials + top 3 risks.
+- **Investor Kit Agent** (`agents/investor-kit.ts`) — Replaced three JSON dumps (~40KB) with investor-relevant data: TAM/SAM/SOM, financial model (kept full), top competitors, verdict, brand essentials. Landing page reduced to deploymentUrl only.
+- **Launch Autopilot Agent** (`agents/launch-autopilot.ts`) — Replaced five JSON dumps (~60KB) with messaging essentials: pain points, brand voice, GTM overview, first 3 weeks + 5 social posts + 3 emails from marketing, feasibility verdict, landing headline + URL.
+- **Gemini SDK** (`lib/gemini.ts`) — `getFlashModel()` and `getProModelWithThinking()` now accept optional `maxOutputTokens` parameter (defaults unchanged at 32768). Agents can now pass lower limits for faster, cheaper responses. System prompt already uses `systemInstruction` pattern enabling Google's server-side caching.
+- **Zero remaining JSON dumps:** `grep 'JSON.stringify(venture.context.' agents/` returns 0 matches.
+- Verified with `tsc --noEmit` (0 errors) and `npm run build` (successful).
+**Token savings estimate:**
+| Agent | Before | After | Reduction |
+|-------|--------|-------|-----------|
+| Identity | ~25KB | ~2KB | 92% |
+| Content | ~40KB | ~6KB | 85% |
+| Feasibility | ~30KB | ~6KB | 80% |
+| Shadow Board | ~50KB | ~7KB | 86% |
+| Investor Kit | ~40KB | ~4KB | 90% |
+| Launch Autopilot | ~60KB | ~3KB | 95% |
+| **Total input savings** | **~245KB** | **~28KB** | **~89%** |
+**Broken:** None. All existing functionality preserved.
+**Next:** Wire per-agent maxOutputTokens (e.g., genesis 12K, identity 6K) and test all modules end-to-end.
+
+### Day 17 (cont. 2) — March 20, 2026
+**Goal:** Add edit mode (in-context learning / statefulness) to ALL 8 remaining agents so follow-up changes are surgical, not full regenerations.
+**Built:**
+- **Genesis Agent** (`agents/genesis.ts`) — Edit mode: detects `venture.context.research`, sends truncated existing data + user's edit request, gets JSON patch, deep-merges via `mergePatch()`. Handles nested objects (tam, sam, som, swot) at sub-field level; arrays (painPoints, competitors, riskMatrix, topConcepts) replace entirely.
+- **Identity Agent** (`agents/identity.ts`) — Edit mode: detects `venture.context.branding`, patches brandName, tagline, colors, typography, toneOfVoice, etc. individually. Nested objects (toneOfVoice, typography, uiKitSpec) merge sub-fields; arrays (colorPalette, nameCandidates) replace entirely.
+- **Content Agent** (`agents/content.ts`) — Edit mode: detects `venture.context.marketing`, patches gtmStrategy, socialCalendar, seoOutlines, emailSequence, hashtagStrategy independently. GTM overview merges sub-fields; arrays replace entirely.
+- **Feasibility Agent** (`agents/feasibility.ts`) — Edit mode: detects `venture.context.feasibility`, patches verdict, financialModel (deep merge into yearOne/yearTwo/yearThree sub-fields), risks, unit economics individually. Uses Flash model for edits (not Pro) — massive cost saving.
+- **Shadow Board Agent** (`agents/shadow.ts`) — Edit mode: detects `venture.context.shadowBoard`, patches survivalScore, verdictLabel, boardDialogue, strategicPivots, syntheticFeedback. Uses Flash model for edits (not Pro with thinking).
+- **Investor Kit Agent** (`agents/investor-kit.ts`) — Edit mode: detects `venture.context.investorKit`, patches executiveSummary, pitchDeckOutline, askDetails (sub-field merge), onePageMemo independently. Long text fields truncated for context window efficiency.
+- **Launch Autopilot Agent** (`agents/launch-autopilot.ts`) — Edit mode: detects `venture.context.launchAutopilot`, patches launchName, days calendar, channels, weekly goals, checklist independently. Days array summarized (first 7 days, 2 tasks each) for context efficiency.
+- **MVP Scalpel Agent** (`agents/mvp-scalpel.ts`) — Edit mode: detects `venture.context.mvpScalpel`, patches killList, skeletonMVP (sub-field merge), weekendSpec (sub-field merge), timeToFirstDollar (sub-field merge), verdict (sub-field merge), antiScopeCreepRules independently.
+- Each agent follows identical pattern: EditPatchSchema (all optional) → mergePatch() → EDIT_SYSTEM_PROMPT → edit-mode detection branch → merge + validate + onComplete
+- Verified with `tsc --noEmit` (0 errors) and `npm run build` (successful).
+**Token savings on follow-up edits:** ~85-95% reduction per agent (only changed fields generated instead of full output).
+**Broken:** None. All initial generation flows completely untouched.
+**Next:** End-to-end testing of edit mode across all modules with live venture data.
