@@ -8,7 +8,7 @@ import {
     getFlashModel,
     Content,
 } from '@/lib/gemini'
-import { resolveLandingComponent } from '@/lib/landing-page'
+import { resolveLandingComponent, isRenderableLandingComponent } from '@/lib/landing-page'
 
 // ── PipelineOutput Zod Schema ────────────────────────────────────────────────
 
@@ -77,6 +77,88 @@ const PipelineOutputSchema = z.object({
 })
 
 export type PipelineOutput = z.infer<typeof PipelineOutputSchema>
+
+// ── Edit Patch Schema (all fields optional — for surgical updates) ───────────
+
+const PipelineEditPatchSchema = z.object({
+    sitemap: z.array(
+        z.object({
+            page: z.string(),
+            path: z.string(),
+            purpose: z.string(),
+        })
+    ).optional(),
+    landingPageCopy: z.object({
+        hero: z.object({
+            headline: z.string().optional(),
+            subheadline: z.string().optional(),
+            ctaPrimary: z.string().optional(),
+            ctaSecondary: z.string().optional(),
+        }).optional(),
+        features: z.array(
+            z.object({
+                title: z.string(),
+                description: z.string(),
+                icon: z.string(),
+            })
+        ).optional(),
+        socialProof: z.array(z.string()).optional(),
+        pricing: z.array(
+            z.object({
+                tier: z.string(),
+                price: z.string(),
+                features: z.array(z.string()),
+                cta: z.string(),
+            })
+        ).optional(),
+        faq: z.array(
+            z.object({
+                question: z.string(),
+                answer: z.string(),
+            })
+        ).optional(),
+    }).optional(),
+    fullComponent: z.string().optional(),
+    seoMetadata: z.object({
+        title: z.string().optional(),
+        description: z.string().optional(),
+        keywords: z.array(z.string()).optional(),
+    }).optional(),
+})
+
+type PipelineEditPatch = z.infer<typeof PipelineEditPatchSchema>
+
+// ── Merge patch into existing result ─────────────────────────────────────────
+
+function mergePatch(existing: PipelineOutput, patch: PipelineEditPatch): PipelineOutput {
+    const merged = { ...existing }
+
+    if (patch.sitemap) merged.sitemap = patch.sitemap
+    if (patch.fullComponent !== undefined) merged.fullComponent = patch.fullComponent
+
+    if (patch.landingPageCopy) {
+        merged.landingPageCopy = { ...existing.landingPageCopy }
+        if (patch.landingPageCopy.hero) {
+            merged.landingPageCopy.hero = {
+                ...existing.landingPageCopy.hero,
+                ...patch.landingPageCopy.hero,
+            }
+        }
+        if (patch.landingPageCopy.features) merged.landingPageCopy.features = patch.landingPageCopy.features
+        if (patch.landingPageCopy.socialProof) merged.landingPageCopy.socialProof = patch.landingPageCopy.socialProof
+        if (patch.landingPageCopy.pricing) merged.landingPageCopy.pricing = patch.landingPageCopy.pricing
+        if (patch.landingPageCopy.faq) merged.landingPageCopy.faq = patch.landingPageCopy.faq
+    }
+
+    if (patch.seoMetadata) {
+        merged.seoMetadata = {
+            ...existing.seoMetadata,
+            ...patch.seoMetadata,
+        }
+    }
+
+    return merged
+}
 
 // ── Deployment Stub ──────────────────────────────────────────────────────────
 
@@ -255,6 +337,42 @@ Output ONLY the JSON — no markdown fences, no explanation after.
 IMPORTANT: Any step-by-step reasoning MUST be wrapped inside <think> and </think> tags. Only the final valid JSON should be outside the tags.
 `
 
+// ── Edit Mode System Prompt ──────────────────────────────────────────────────
+
+const EDIT_SYSTEM_PROMPT = `
+# Landing Page Edit Mode — Surgical Update Specialist
+
+You are editing an EXISTING, production-quality landing page. The founder wants a specific change. Your job is to apply ONLY that change — nothing else.
+
+## Rules
+
+1. Output ONLY the fields that need to change as a JSON patch object.
+2. Valid top-level keys: sitemap, landingPageCopy, fullComponent, seoMetadata. Do NOT include deploymentUrl, leadCaptureActive, or analyticsActive.
+3. For landingPageCopy: include only the sub-objects that changed.
+   - If only the hero headline changes: {"landingPageCopy": {"hero": {"headline": "new value"}}}
+   - If only pricing tiers change: {"landingPageCopy": {"pricing": [... full replacement array ...]}}
+   - Array fields (features, socialProof, pricing, faq) are always replaced entirely when included.
+4. For fullComponent: if the React component code needs to change, output the COMPLETE updated component string — never a partial diff or patch. The component must remain a fully working React functional component with Tailwind CSS.
+5. If the user's change only affects structured copy (headline, CTA text, pricing, FAQ, etc.), do NOT regenerate fullComponent UNLESS the text is hardcoded inside the component rather than using data variables. Check this carefully.
+6. If the user's change requires a visual/structural change to the component (add a section, change layout, modify animations, etc.), you MUST output the full updated fullComponent.
+7. For seoMetadata: include only the fields that changed (title, description, or keywords).
+8. For sitemap: include only if the site structure actually changes.
+9. Preserve the EXACT brand colors, voice, and design quality of the original page.
+
+## Output Format
+
+Output a single valid JSON object containing ONLY the changed fields. Example for a headline-only change:
+
+{"landingPageCopy": {"hero": {"headline": "Your New Headline Here"}}}
+
+Example for a component + copy change:
+
+{"landingPageCopy": {"hero": {"headline": "New Headline"}}, "fullComponent": "function LandingPage() { ... complete code ... }"}
+
+CRITICAL: Output ONLY the JSON patch — no markdown fences, no explanation after.
+IMPORTANT: Any step-by-step reasoning MUST be wrapped inside <think> and </think> tags. Only the final valid JSON should be outside the tags.
+`
+
 // ── Agent Runner ──────────────────────────────────────────────────────────────
 
 export async function runPipelineAgent(
@@ -384,9 +502,72 @@ CRITICAL: The fullComponent must be a COMPLETE working React component. Start wi
 
 Output the complete PipelineOutput JSON.`
 
+    // ── Detect edit mode: existing landing page + not a continuation resume ────
+    const existingLanding = venture.context.landing as PipelineOutput | null | undefined
+    const isEditMode = !isContinuation && !!existingLanding?.fullComponent && existingLanding.fullComponent.length > 100
+
     const run = async () => {
-        // Custom model config: lower temp for code gen accuracy, larger output for full page component
         const model = getFlashModel()
+        const branding = venture.context.branding as Record<string, any> | undefined
+
+        // ── EDIT MODE: surgical patch instead of full regeneration ────────────
+        if (isEditMode) {
+            await onStream('[Edit mode] Applying surgical changes to existing landing page...\n')
+
+            // Build compact context: structured copy + truncated component
+            const componentPreview = existingLanding!.fullComponent.length > 1200
+                ? existingLanding!.fullComponent.slice(0, 600) + '\n// ... [' + (existingLanding!.fullComponent.length - 1200) + ' chars truncated] ...\n' + existingLanding!.fullComponent.slice(-600)
+                : existingLanding!.fullComponent
+            const existingForContext = {
+                sitemap: existingLanding!.sitemap,
+                landingPageCopy: existingLanding!.landingPageCopy,
+                seoMetadata: existingLanding!.seoMetadata,
+                fullComponent: componentPreview,
+            }
+
+            const editUserMessage = `## Edit Request\n${venture.name}\n\n## Current Landing Page Data\n\`\`\`json\n${JSON.stringify(existingForContext, null, 2)}\n\`\`\`\n\nApply the requested change. Output ONLY the fields that need to change as a JSON patch.`
+
+            let fullText = ''
+            await streamPrompt(
+                model,
+                EDIT_SYSTEM_PROMPT,
+                editUserMessage,
+                async (chunk) => {
+                    fullText += chunk
+                    await onStream(chunk)
+                },
+                history
+            )
+
+            const rawPatch = extractJSON(fullText) as PipelineEditPatch
+            const validatedPatch = PipelineEditPatchSchema.parse(rawPatch)
+
+            // Safety: if the patch's fullComponent is broken, keep the existing one
+            if (validatedPatch.fullComponent !== undefined && !isRenderableLandingComponent(validatedPatch.fullComponent)) {
+                validatedPatch.fullComponent = undefined // discard broken component, keep existing
+                await onStream('\n[Edit mode] Component patch was invalid — keeping existing component.\n')
+            }
+
+            const merged = mergePatch(existingLanding!, validatedPatch)
+            const validated = PipelineOutputSchema.parse(merged)
+
+            validated.fullComponent = resolveLandingComponent({
+                ventureName: branding?.brandName || venture.name,
+                fullComponent: validated.fullComponent,
+                landingPageCopy: validated.landingPageCopy,
+                seoMetadata: validated.seoMetadata,
+                colorPalette: branding?.colorPalette,
+            })
+
+            validated.deploymentUrl = await deployLandingPage(venture.ventureId, validated)
+            validated.leadCaptureActive = true
+            validated.analyticsActive = false
+
+            await onComplete(validated)
+            return
+        }
+
+        // ── INITIAL GENERATION: full PipelineOutput (existing behavior) ──────
         let fullText = (history.find(h => h.role === 'model')?.parts[0] as any)?.text || ''
 
         await streamPrompt(
@@ -402,7 +583,6 @@ Output the complete PipelineOutput JSON.`
 
         const raw = extractJSON(fullText) as PipelineOutput
         const validated = PipelineOutputSchema.parse(raw)
-        const branding = venture.context.branding as Record<string, any> | undefined
 
         validated.fullComponent = resolveLandingComponent({
             ventureName: branding?.brandName || venture.name,
