@@ -53,20 +53,20 @@ export function VentureDashboard({ venture }: VentureDashboardProps) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[var(--bg)]">
+    <div className="flex h-full flex-col bg-[var(--bg)]">
       {/* Top Header / Stats */}
-      <div className="flex items-center justify-between p-6 bg-[var(--sidebar)] border-b border-[var(--border)]">
+      <div className="flex flex-col gap-4 border-b border-[var(--border)] bg-[var(--sidebar)] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[var(--text)]">{venture.name}</h1>
+          <h1 className="text-xl font-bold tracking-tight text-[var(--text)] sm:text-2xl">{venture.name}</h1>
           <p className="text-sm text-[var(--muted)]">Master Venture Dossier</p>
         </div>
-        <div className="flex gap-4">
+        <div className="flex w-full flex-wrap gap-3 sm:w-auto sm:justify-end sm:gap-4">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleExportPDF}
             disabled={isExporting}
-            className="flex items-center gap-2 px-4 py-2 bg-[var(--nav-active)] border border-[var(--border)] rounded-lg text-sm font-semibold text-[var(--text)] hover:bg-[var(--glass-bg-strong)] transition-all shadow-sm disabled:opacity-50"
+            className="flex min-w-[170px] flex-1 items-center justify-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--nav-active)] px-3 py-2 text-sm font-semibold text-[var(--text)] shadow-sm transition-all hover:bg-[var(--glass-bg-strong)] disabled:opacity-50 sm:min-w-0 sm:flex-initial sm:px-4"
           >
             <Download size={16} className={isExporting ? "animate-bounce" : ""} />
             {isExporting ? "Exporting..." : "Export Unified PDF"}
@@ -75,7 +75,7 @@ export function VentureDashboard({ venture }: VentureDashboardProps) {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg text-sm font-semibold text-white shadow-lg hover:shadow-xl transition-all"
+            className="flex min-w-[150px] flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:shadow-xl sm:min-w-0 sm:flex-initial sm:px-4"
           >
             <Share2 size={16} />
             Share Dossier
@@ -84,13 +84,13 @@ export function VentureDashboard({ venture }: VentureDashboardProps) {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-2 p-4 bg-[var(--glass-bg)] border-b border-[var(--border)] overflow-x-auto no-scrollbar">
+      <div className="flex gap-2 overflow-x-auto border-b border-[var(--border)] bg-[var(--glass-bg)] p-3 sm:p-4 no-scrollbar">
         {TABS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`
-              flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 relative
+              relative flex items-center gap-2 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-bold transition-all duration-300 sm:px-6
               ${activeTab === tab.id 
                 ? "bg-[var(--glass-bg-strong)] text-[var(--text)] shadow-sm" 
                 : "text-[var(--muted)] hover:text-[var(--text-soft)] hover:bg-[var(--glass-bg)]"}
@@ -112,7 +112,7 @@ export function VentureDashboard({ venture }: VentureDashboardProps) {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto p-8 bg-[var(--bg)] scroll-smooth no-scrollbar">
+      <div className="flex-1 overflow-y-auto bg-[var(--bg)] p-4 scroll-smooth sm:p-8 no-scrollbar">
         <div className="max-w-5xl mx-auto">
           {mounted && (
             <AnimatePresence mode="wait">
@@ -129,7 +129,7 @@ export function VentureDashboard({ venture }: VentureDashboardProps) {
                     result={venture.context[activeTab as keyof typeof venture.context]}
                   />
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-24 text-center border-2 border-dashed border-[var(--border)] rounded-3xl opacity-60">
+                  <div className="flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-[var(--border)] py-16 text-center opacity-60 sm:py-24">
                     <div className="w-16 h-16 mb-4 rounded-full bg-[var(--glass-bg)] flex items-center justify-center text-[var(--muted)]">
                        <FileText size={32} />
                     </div>

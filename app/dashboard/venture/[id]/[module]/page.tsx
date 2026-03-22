@@ -378,6 +378,8 @@ export default function ModulePage() {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const chatAreaRef = useRef<HTMLDivElement>(null)
+  const esRef = useRef<EventSource | null>(null)
+  const activeConversationIdRef = useRef<string | null>(null)
 
   const [showScrollBtn, setShowScrollBtn] = useState(false)
   const [readingPanelOpen, setReadingPanelOpen] = useState(true)
@@ -667,6 +669,8 @@ export default function ModulePage() {
       ))
 
       const es = new EventSource(`/api/ventures/${ventureId}/stream/${serverConversationId}`)
+      esRef.current = es
+      activeConversationIdRef.current = serverConversationId
       let streamDone = false
 
       es.addEventListener('message', (e: MessageEvent) => {
@@ -686,11 +690,15 @@ export default function ModulePage() {
             streamDone = true
             updateEntry({ isRunning: false, result: data.result, agentStatuses: buildCompletedStatuses(mod.accent) })
             es.close()
+            esRef.current = null
+            activeConversationIdRef.current = null
             setIsSubmitting(false)
           } else if (data.type === 'error') {
             streamDone = true
             updateEntry({ isRunning: false, isError: true })
             es.close()
+            esRef.current = null
+            activeConversationIdRef.current = null
             setIsSubmitting(false)
           }
         } catch (err) {
@@ -745,8 +753,33 @@ export default function ModulePage() {
   }
 
   function handleContinue(entry: ConversationEntry) {
-    const partialOutput = entry.lines.join('\n')
+    // Strip internal status markers before sending as model history
+    const partialOutput = entry.lines
+      .filter(l => !l.startsWith('__STATUS__'))
+      .join('\n')
     executeRun(entry.prompt, undefined, true, partialOutput)
+  }
+
+  async function handleStop() {
+    const es = esRef.current
+    const convId = activeConversationIdRef.current
+    if (es) {
+      es.close()
+      esRef.current = null
+    }
+    if (convId) {
+      activeConversationIdRef.current = null
+      // Signal server to mark as failed so the stream endpoint stops
+      try {
+        await fetch(`/api/ventures/${ventureId}/run/${convId}/cancel`, { method: 'POST' })
+      } catch { /* best-effort */ }
+      // Update the running conversation entry to stopped state
+      setConversations(prev => prev.map(c => {
+        if (c.conversationId !== convId) return c
+        return { ...c, isRunning: false, lines: [...c.lines, '\n[Stopped by user]'] }
+      }))
+    }
+    setIsSubmitting(false)
   }
 
   // Reset reading panel and decision bar when module changes
@@ -1405,6 +1438,8 @@ export default function ModulePage() {
                           </div>
                         </div>
                         <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+                          {/* Continue is hidden for search-based modules — they always re-run web searches, wasting tokens */}
+                          {activeModule !== 'research' && activeModule !== 'full-launch' && (
                           <motion.button
                             onClick={() => handleContinue(entry)}
                             style={{
@@ -1421,6 +1456,7 @@ export default function ModulePage() {
                             </svg>
                             Continue
                           </motion.button>
+                          )}
 
                           <motion.button
                             onClick={() => retryEntry(entry)}
@@ -2040,31 +2076,42 @@ export default function ModulePage() {
                         <span style={kbdStyle}>Enter</span>
                         <span style={{ fontSize: 10, color: 'var(--muted)', opacity: 0.4, marginLeft: 4 }}>to run</span>
                       </div>
-                      <motion.button
-                        type="submit"
-                        whileHover={canSubmit ? { scale: 1.08 } : {}}
-                        whileTap={canSubmit ? { scale: 0.92 } : {}}
-                        disabled={!canSubmit}
-                        style={{
-                          ...sendBtnStyle,
-                          background: canSubmit
-                            ? `linear-gradient(135deg, ${mod.accent}, ${mod.accent}cc)`
-                            : 'var(--border)',
-                          boxShadow: canSubmit ? `0 4px 12px ${mod.accent}40` : 'none',
-                        }}
-                      >
-                        {isSubmitting ? (
-                          <motion.div
-                            style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff' }}
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }}
-                          />
-                        ) : (
+                      {isSubmitting ? (
+                        <motion.button
+                          type="button"
+                          onClick={(e) => { e.preventDefault(); handleStop() }}
+                          whileHover={{ scale: 1.08 }}
+                          whileTap={{ scale: 0.92 }}
+                          style={{
+                            ...sendBtnStyle,
+                            background: 'linear-gradient(135deg, #dc2626, #dc2626cc)',
+                            boxShadow: '0 4px 12px rgba(220,38,38,0.3)',
+                          }}
+                          title="Stop generating"
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="#fff" stroke="none">
+                            <rect x="4" y="4" width="16" height="16" rx="2" />
+                          </svg>
+                        </motion.button>
+                      ) : (
+                        <motion.button
+                          type="submit"
+                          whileHover={canSubmit ? { scale: 1.08 } : {}}
+                          whileTap={canSubmit ? { scale: 0.92 } : {}}
+                          disabled={!canSubmit}
+                          style={{
+                            ...sendBtnStyle,
+                            background: canSubmit
+                              ? `linear-gradient(135deg, ${mod.accent}, ${mod.accent}cc)`
+                              : 'var(--border)',
+                            boxShadow: canSubmit ? `0 4px 12px ${mod.accent}40` : 'none',
+                          }}
+                        >
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <line x1="12" y1="19" x2="12" y2="5" /><polyline points="5 12 12 5 19 12" />
                           </svg>
-                        )}
-                      </motion.button>
+                        </motion.button>
+                      )}
                     </div>
                   </motion.div>
                 </form>
@@ -2918,33 +2965,66 @@ function BrandingDoc({ result }: { result: Record<string, any> }) {
 function MarketingDoc({ result }: { result: Record<string, any> }) {
   if (!result) return <div style={{ color: 'var(--muted)', fontSize: 12 }}>No result data available yet.</div>
   const m = result.marketing || result
-  const gtm = m.gtmStrategy || m
+  const gtm = m.gtmStrategy || {}
+  const weeks = Array.isArray(gtm.weeks) ? gtm.weeks : []
   const socialPosts = Array.isArray(m.socialCalendar) ? m.socialCalendar : []
   const seoOutlines = Array.isArray(m.seoOutlines) ? m.seoOutlines : []
   const emailSequence = Array.isArray(m.emailSequence) ? m.emailSequence : []
-  const channels = Array.isArray(gtm.channels || m.channels) ? (gtm.channels || m.channels) : []
-  const phases = Array.isArray(gtm.phases || m.phases) ? (gtm.phases || m.phases) : []
+  const hashtags = m.hashtagStrategy || {}
+
+  // Group social posts by platform for organized display
+  const postsByPlatform: Record<string, any[]> = {}
+  socialPosts.forEach((post: any) => {
+    const plat = typeof post === 'object' ? (post.platform || 'other') : 'other'
+    if (!postsByPlatform[plat]) postsByPlatform[plat] = []
+    postsByPlatform[plat].push(post)
+  })
 
   return (
     <>
-      <h1 style={docTitleStyle}>Go-To-Market Strategy</h1>
+      <h1 style={docTitleStyle}>Marketing Strategy</h1>
 
-      {(gtm.overview || m.theme) && (
-        <DocSection title="Strategy Overview">
-          <p style={docParaStyle}>{gtm.overview || m.theme}</p>
+      {/* ── Full Marketing Plan (markdown) ── */}
+      {m.marketingPlan && (
+        <DocSection title="Marketing Plan">
+          <MarkdownBlock content={m.marketingPlan} />
         </DocSection>
       )}
 
-      {phases.length > 0 && (
-        <DocSection title="Growth Phases">
-          {phases.map((p: any, i: number) => (
-            <div key={i} style={{ padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>
-                Phase {i + 1}: {typeof p === 'object' ? (p.name || p.title || '') : String(p)}
+      {/* ── GTM Strategy Overview ── */}
+      {gtm.overview && (
+        <DocSection title="GTM Strategy Overview">
+          <p style={docParaStyle}>{gtm.overview}</p>
+        </DocSection>
+      )}
+
+      {/* ── Weekly Breakdown ── */}
+      {weeks.length > 0 && (
+        <DocSection title={`30-Day GTM Breakdown (${weeks.length} weeks)`}>
+          {weeks.map((w: any, i: number) => (
+            <div key={i} style={{ padding: '12px 0', borderBottom: i < weeks.length - 1 ? '1px solid var(--border)' : 'none' }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>
+                Week {w.week || i + 1}: {w.theme}
               </div>
-              {typeof p === 'object' && (p.description || p.activities) && (
-                <div style={{ fontSize: 11, color: 'var(--text-soft)', marginTop: 4, lineHeight: 1.5 }}>
-                  {p.description || (Array.isArray(p.activities) ? p.activities.join(', ') : String(p.activities || ''))}
+              {Array.isArray(w.actions) && w.actions.length > 0 && (
+                <div style={{ marginBottom: 6 }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4, letterSpacing: '0.04em' }}>Actions</div>
+                  {w.actions.map((a: string, j: number) => (
+                    <div key={j} style={{ fontSize: 11, color: 'var(--text-soft)', lineHeight: 1.5, paddingLeft: 10, position: 'relative' }}>
+                      <span style={{ position: 'absolute', left: 0, color: 'var(--muted)' }}>•</span>
+                      {a}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {Array.isArray(w.kpis) && w.kpis.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4, letterSpacing: '0.04em' }}>KPIs</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {w.kpis.map((k: string, j: number) => (
+                      <span key={j} style={{ padding: '2px 8px', background: '#8C5A7A10', borderRadius: 4, fontSize: 10, color: '#8C5A7A', border: '1px solid #8C5A7A20', fontWeight: 500 }}>{k}</span>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -2952,43 +3032,70 @@ function MarketingDoc({ result }: { result: Record<string, any> }) {
         </DocSection>
       )}
 
-      {channels.length > 0 && (
-        <DocSection title="Marketing Channels">
-          <DocList items={channels} />
-        </DocSection>
-      )}
-
+      {/* ── Social Calendar — all posts by platform ── */}
       {socialPosts.length > 0 && (
         <DocSection title={`Social Calendar (${socialPosts.length} posts)`}>
-          {socialPosts.slice(0, 10).map((post: any, i: number) => (
-            <div key={i} style={{ padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 11 }}>
-              <div style={{ fontWeight: 600, color: 'var(--text)', marginBottom: 2 }}>
-                {typeof post === 'object' ? (post.platform || post.channel || `Post ${i + 1}`) : `Post ${i + 1}`}
-                {typeof post === 'object' && post.day && <span style={{ color: 'var(--muted)', fontWeight: 400 }}> - Day {post.day}</span>}
+          {Object.entries(postsByPlatform).map(([platform, posts]) => (
+            <div key={platform} style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#8C5A7A', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>
+                {platform === 'x' ? '𝕏 (Twitter)' : platform === 'linkedin' ? 'LinkedIn' : platform === 'instagram' ? 'Instagram' : platform} — {posts.length} posts
               </div>
-              <div style={{ color: 'var(--text-soft)', lineHeight: 1.4 }}>
-                {typeof post === 'object' ? (post.content || post.caption || post.text || JSON.stringify(post)) : String(post)}
-              </div>
+              {posts.map((post: any, i: number) => (
+                <div key={i} style={{ padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 11 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                    <span style={{ fontWeight: 600, color: 'var(--text)' }}>
+                      Day {typeof post === 'object' ? post.day : i + 1}
+                    </span>
+                    {typeof post === 'object' && post.postType && (
+                      <span style={{ fontSize: 9, padding: '1px 6px', background: 'var(--glass-bg)', borderRadius: 3, color: 'var(--muted)', border: '1px solid var(--border)' }}>{post.postType}</span>
+                    )}
+                  </div>
+                  <div style={{ color: 'var(--text-soft)', lineHeight: 1.5 }}>
+                    {typeof post === 'object' ? (post.caption || post.content || post.text || JSON.stringify(post)) : String(post)}
+                  </div>
+                  {typeof post === 'object' && Array.isArray(post.hashtags) && post.hashtags.length > 0 && (
+                    <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                      {post.hashtags.map((h: string, j: number) => (
+                        <span key={j} style={{ fontSize: 9, color: '#8C5A7A', opacity: 0.7 }}>#{h}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           ))}
-          {socialPosts.length > 10 && (
-            <div style={{ fontSize: 11, color: 'var(--muted)', padding: '8px 0', fontStyle: 'italic' }}>
-              + {socialPosts.length - 10} more posts...
-            </div>
-          )}
         </DocSection>
       )}
 
+      {/* ── SEO Content Outlines — full detail ── */}
       {seoOutlines.length > 0 && (
-        <DocSection title="SEO Content Outlines">
+        <DocSection title={`SEO Content Outlines (${seoOutlines.length} articles)`}>
           {seoOutlines.map((outline: any, i: number) => (
-            <div key={i} style={{ padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>
+            <div key={i} style={{ padding: '10px 0', borderBottom: i < seoOutlines.length - 1 ? '1px solid var(--border)' : 'none' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>
                 {typeof outline === 'object' ? (outline.title || outline.topic || JSON.stringify(outline)) : String(outline)}
               </div>
-              {typeof outline === 'object' && outline.keywords && (
-                <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2 }}>
-                  Keywords: {Array.isArray(outline.keywords) ? outline.keywords.join(', ') : outline.keywords}
+              {typeof outline === 'object' && (
+                <div style={{ display: 'flex', gap: 12, marginBottom: 6, flexWrap: 'wrap' }}>
+                  {outline.targetKeyword && (
+                    <span style={{ fontSize: 10, color: 'var(--muted)' }}>Keyword: <strong style={{ color: 'var(--text-soft)' }}>{outline.targetKeyword}</strong></span>
+                  )}
+                  {outline.searchIntent && (
+                    <span style={{ fontSize: 10, color: 'var(--muted)' }}>Intent: <strong style={{ color: 'var(--text-soft)' }}>{outline.searchIntent}</strong></span>
+                  )}
+                  {outline.estimatedTraffic && (
+                    <span style={{ fontSize: 10, color: 'var(--muted)' }}>Traffic: <strong style={{ color: 'var(--text-soft)' }}>{outline.estimatedTraffic}</strong></span>
+                  )}
+                </div>
+              )}
+              {typeof outline === 'object' && Array.isArray(outline.outline) && outline.outline.length > 0 && (
+                <div style={{ paddingLeft: 10 }}>
+                  {outline.outline.map((section: string, j: number) => (
+                    <div key={j} style={{ fontSize: 11, color: 'var(--text-soft)', lineHeight: 1.5, position: 'relative', paddingLeft: 10 }}>
+                      <span style={{ position: 'absolute', left: 0, color: 'var(--muted)' }}>•</span>
+                      {section}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -2996,16 +3103,37 @@ function MarketingDoc({ result }: { result: Record<string, any> }) {
         </DocSection>
       )}
 
+      {/* ── Email Sequence — full bodies ── */}
       {emailSequence.length > 0 && (
-        <DocSection title="Email Sequence">
+        <DocSection title={`Email Launch Sequence (${emailSequence.length} emails)`}>
           {emailSequence.map((email: any, i: number) => (
-            <div key={i} style={{ padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>
-                {typeof email === 'object' ? (email.subject || email.title || `Email ${i + 1}`) : String(email)}
+            <div key={i} style={{ padding: '10px 0', borderBottom: i < emailSequence.length - 1 ? '1px solid var(--border)' : 'none' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: '#8C5A7A10', color: '#8C5A7A', border: '1px solid #8C5A7A20', textTransform: 'uppercase' }}>
+                  Day {typeof email === 'object' ? email.day : i}
+                </span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>
+                  {typeof email === 'object' ? (email.subject || email.title || `Email ${i + 1}`) : String(email)}
+                </span>
               </div>
+              {typeof email === 'object' && email.preview && (
+                <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 4, fontStyle: 'italic' }}>
+                  Preview: {email.preview}
+                </div>
+              )}
+              {typeof email === 'object' && Array.isArray(email.bodyOutline) && email.bodyOutline.length > 0 && (
+                <div style={{ paddingLeft: 10 }}>
+                  {email.bodyOutline.map((point: string, j: number) => (
+                    <div key={j} style={{ fontSize: 11, color: 'var(--text-soft)', lineHeight: 1.5, position: 'relative', paddingLeft: 10 }}>
+                      <span style={{ position: 'absolute', left: 0, color: 'var(--muted)' }}>•</span>
+                      {point}
+                    </div>
+                  ))}
+                </div>
+              )}
               {typeof email === 'object' && email.body && (
-                <div style={{ fontSize: 11, color: 'var(--text-soft)', marginTop: 2, lineHeight: 1.4 }}>
-                  {email.body.length > 200 ? email.body.slice(0, 200) + '...' : email.body}
+                <div style={{ fontSize: 11, color: 'var(--text-soft)', marginTop: 4, lineHeight: 1.5 }}>
+                  {email.body}
                 </div>
               )}
             </div>
@@ -3013,11 +3141,32 @@ function MarketingDoc({ result }: { result: Record<string, any> }) {
         </DocSection>
       )}
 
+      {/* ── Hashtag Strategy ── */}
+      {(Array.isArray(hashtags.x) && hashtags.x.length > 0) || (Array.isArray(hashtags.linkedin) && hashtags.linkedin.length > 0) || (Array.isArray(hashtags.instagram) && hashtags.instagram.length > 0) ? (
+        <DocSection title="Hashtag Strategy">
+          {[
+            { label: '𝕏 (Twitter)', tags: Array.isArray(hashtags.x) ? hashtags.x : [] },
+            { label: 'LinkedIn', tags: Array.isArray(hashtags.linkedin) ? hashtags.linkedin : [] },
+            { label: 'Instagram', tags: Array.isArray(hashtags.instagram) ? hashtags.instagram : [] },
+          ].filter(g => g.tags.length > 0).map((group, i) => (
+            <div key={i} style={{ marginBottom: 10 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4, letterSpacing: '0.04em' }}>{group.label}</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                {group.tags.map((tag: string, j: number) => (
+                  <span key={j} style={{ padding: '2px 8px', background: 'var(--glass-bg)', borderRadius: 4, fontSize: 10, color: '#8C5A7A', border: '1px solid var(--border)' }}>#{tag}</span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </DocSection>
+      ) : null}
+
+      {/* ── Performance Metrics ── */}
       <DocSection title="Performance Metrics">
-        <DocKV label="Total Posts" value={m.totalPostsCount || socialPosts.length || undefined} />
+        <DocKV label="Total Posts" value={socialPosts.length || undefined} />
         <DocKV label="SEO Articles" value={seoOutlines.length || undefined} />
         <DocKV label="Email Drips" value={emailSequence.length || undefined} />
-        <DocKV label="Target CAC" value={m.targetCac || gtm.targetCac} />
+        <DocKV label="Platforms" value={Object.keys(postsByPlatform).length > 0 ? Object.keys(postsByPlatform).join(', ') : undefined} />
       </DocSection>
     </>
   )

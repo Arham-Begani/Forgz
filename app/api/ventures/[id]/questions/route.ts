@@ -20,7 +20,7 @@ const QuestionSchema = z.object({
             description: z.string(),
             recommended: z.boolean().optional(),
         })),
-    })).min(1).max(4),
+    })).max(4),
 })
 
 const MODULE_CONTEXT: Record<string, string> = {
@@ -66,13 +66,28 @@ export async function POST(
         if (context?.landing) contextParts.push(`Landing page data exists: yes`)
         if (context?.feasibility) contextParts.push(`Feasibility data exists: yes`)
 
-        const systemPrompt = `You are Forge, an AI venture orchestrator. Before running a ${moduleId} agent for the user, you need to ask 2-3 important strategic questions so the user has input on key decisions.
+        const systemPrompt = `You are Forge, an AI venture orchestrator. You MUST decide whether the user's prompt requires strategic questions before running the ${moduleId} agent.
 
 The ${moduleId} module handles: ${moduleDesc}
 
 ${contextParts.length > 0 ? `Current venture context:\n${contextParts.join('\n')}` : 'This is a fresh venture with no prior context.'}
 
-Generate 2-3 focused questions that would help produce better, more personalized results. Each question should:
+CRITICAL RULES — when to return an EMPTY questions array (no questions):
+- The user gives a specific, clear instruction (e.g. "change the name to X", "use blue instead of red", "make the tagline shorter", "add a pricing section")
+- The user is making a modification, tweak, or update to existing output
+- The user's intent is unambiguous and doesn't require strategic input
+- The user is asking for a single concrete change
+- The prompt is a follow-up refining previous results
+
+ONLY generate 2-3 questions when ALL of these are true:
+- The prompt is broad or open-ended (e.g. "build my brand", "create a landing page", "do market research")
+- There are genuinely important strategic decisions the user should weigh in on
+- The user has NOT already specified enough detail to proceed
+- This appears to be an initial/fresh run of the module, not a refinement
+
+If questions are NOT needed, respond with: { "questions": [] }
+
+If questions ARE needed, generate 2-3 focused questions. Each should:
 - Address a real strategic decision the user should weigh in on
 - Have 2-3 clear options (one can be marked as recommended)
 - Include a brief description for each option explaining the tradeoff
@@ -101,7 +116,7 @@ Respond with ONLY valid JSON matching this schema:
 
         const result = await chat.sendMessage(`The user wants to run the ${moduleId} module with this prompt: "${prompt}"
 
-Generate 2-3 strategic questions for the user to answer before we proceed.`)
+First decide: is this prompt specific enough to proceed without questions? If yes, return {"questions": []}. Only generate questions if the prompt is genuinely open-ended and would benefit from strategic input.`)
 
         const text = result.response.text()
         const json = extractJSON(text)
