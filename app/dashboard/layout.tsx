@@ -17,6 +17,7 @@ interface SessionData {
   creditsRemaining?: number
   allowedModules?: string[]
   hasUnlimitedAccess?: boolean
+  isAdmin?: boolean
 }
 
 interface ProjectItem {
@@ -339,7 +340,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Loading Screen */}
       {!appReady && <LoadingScreen onComplete={handleLoadingComplete} minimumDuration={800} />}
 
-      <div className="flex h-screen overflow-hidden" style={{ opacity: appReady ? 1 : 0, transition: 'opacity 0.3s ease' }}>
+      <div className="flex h-[100dvh] overflow-hidden" style={{ opacity: appReady ? 1 : 0, transition: 'opacity 0.3s ease' }}>
 
         {/* ─── Mobile overlay ─── */}
         {mounted && (
@@ -351,6 +352,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
                 onClick={() => setMobileOpen(false)}
+                className="mobile-overlay"
                 style={{
                   position: 'fixed',
                   inset: 0,
@@ -358,7 +360,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   backdropFilter: 'blur(4px)',
                   zIndex: 40,
                 }}
-                className="lg:hidden"
               />
             )}
           </AnimatePresence>
@@ -367,7 +368,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         {/* ─── Sidebar ─── */}
         {mounted ? (
           <motion.aside
-            className="glass-sidebar"
+            className={`glass-sidebar sidebar-desktop${mobileOpen ? ' mobile-open' : ''}`}
             animate={{ width: sidebarWidth }}
             transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
             style={{
@@ -376,7 +377,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               flexDirection: 'column',
               flexShrink: 0,
               zIndex: 50,
-              position: 'relative',
               overflow: 'hidden',
             }}
           >
@@ -1087,34 +1087,76 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     </span>
                   )}
                 </div>
-                <motion.button
-                  whileHover={{ rotate: 90, scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  transition={{ type: 'spring', stiffness: 200, damping: 10 }}
-                  onClick={() => router.push('/dashboard/settings')}
-                  aria-label="Settings"
-                  style={{
-                    padding: 4,
-                    border: 'none',
-                    background: 'transparent',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    borderRadius: 6,
-                  }}
-                >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="3" />
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                  </svg>
-                </motion.button>
+                <div style={{ display: 'flex', gap: 2 }}>
+                  {session?.isAdmin && (
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => router.push('/dashboard/admin')}
+                      aria-label="Admin Dashboard"
+                      style={{
+                        padding: 4,
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        borderRadius: 6,
+                      }}
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                      </svg>
+                    </motion.button>
+                  )}
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => router.push('/dashboard/analytics')}
+                    aria-label="Analytics"
+                    style={{
+                      padding: 4,
+                      border: 'none',
+                      background: 'transparent',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      borderRadius: 6,
+                    }}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" />
+                    </svg>
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ rotate: 90, scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    transition={{ type: 'spring', stiffness: 200, damping: 10 }}
+                    onClick={() => router.push('/dashboard/settings')}
+                    aria-label="Settings"
+                    style={{
+                      padding: 4,
+                      border: 'none',
+                      background: 'transparent',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      borderRadius: 6,
+                    }}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="3" />
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                    </svg>
+                  </motion.button>
+                </div>
               </motion.div>
             )}
           </div>
         </motion.aside>
       ) : (
         <aside
-          className="glass-sidebar"
+          className="glass-sidebar sidebar-desktop"
           style={{
             width: sidebarCollapsed ? 64 : 272,
             height: '100vh',
@@ -1122,7 +1164,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             flexDirection: 'column',
             flexShrink: 0,
             zIndex: 50,
-            position: 'relative',
             overflow: 'hidden',
             background: 'var(--glass-bg)',
             borderRight: '1px solid var(--border)',
@@ -1140,9 +1181,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       )}
 
       {/* ─── Mobile hamburger ─── */}
-      {mounted && (
+      {mounted && !mobileOpen && (
         <motion.button
-          className="lg:hidden fixed top-3 left-3 z-30"
+          className="mobile-hamburger"
           onClick={() => setMobileOpen(true)}
           style={{
             width: 40,
@@ -1152,7 +1193,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             backdropFilter: 'blur(12px)',
             border: '1px solid var(--border)',
             cursor: 'pointer',
-            display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             color: 'var(--text)',

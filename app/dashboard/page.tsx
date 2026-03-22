@@ -145,7 +145,7 @@ export default function DashboardPage() {
   // ── Loading skeleton ────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div style={pageStyle}>
+      <div className="page-responsive" style={pageStyle}>
         <div style={ambientBlob1} />
         <div style={ambientBlob2} />
         <div style={contentStyle}>
@@ -156,14 +156,14 @@ export default function DashboardPage() {
           </div>
 
           {/* Skeleton Quick Actions */}
-          <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+          <div className="quick-actions-responsive" style={{ marginBottom: 20 }}>
             {[1, 2, 3, 4].map(i => (
               <div key={i} style={{ width: 110, height: 38, borderRadius: 10 }} className="skeleton" />
             ))}
           </div>
 
           {/* Skeleton Stats Bar */}
-          <div className="glass" style={{ ...statsBarStyle, border: 'none' }}>
+          <div className="glass stats-responsive" style={{ borderRadius: 16, marginBottom: 28, border: 'none' }}>
             {[1, 2, 3].map(i => (
               <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
                 <div style={{ width: 32, height: 28, borderRadius: 6 }} className="skeleton" />
@@ -173,7 +173,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Skeleton Grid */}
-          <div style={gridStyle}>
+          <div className="grid-responsive">
             {[1, 2, 3, 4, 5, 6].map(i => (
               <div key={i} className="glass-card" style={{ ...projectCardStyle, border: 'none', pointerEvents: 'none' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
@@ -454,7 +454,7 @@ export default function DashboardPage() {
   // ── Empty state ────────────────────────────────────────────────────────
   if (!projects.length) {
     return (
-      <div style={pageStyle}>
+      <div className="page-responsive" style={pageStyle}>
         <div style={ambientBlob1} />
         <div style={ambientBlob2} />
         <motion.div
@@ -510,7 +510,7 @@ export default function DashboardPage() {
   // ── Main dashboard ────────────────────────────────────────────────────
   return (
     <ErrorBoundary>
-      <div style={pageStyle}>
+      <div className="page-responsive" style={pageStyle}>
         <div style={ambientBlob1} />
         <div style={ambientBlob2} />
 
@@ -522,7 +522,7 @@ export default function DashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
-            <h1 style={heroHeadingStyle}>
+            <h1 className="heading-responsive" style={{ fontWeight: 800, color: 'var(--text)', margin: '0 0 6px', letterSpacing: '-0.04em' }}>
               <span className="gradient-text">Command Center</span>
             </h1>
             <p style={heroSubStyle}>
@@ -532,7 +532,8 @@ export default function DashboardPage() {
 
           {/* Quick actions */}
           <motion.div
-            style={quickActionsStyle}
+            className="quick-actions-responsive"
+            style={{ marginBottom: 20 }}
             initial="hidden" animate="show"
             variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.06 } } }}
           >
@@ -555,24 +556,24 @@ export default function DashboardPage() {
 
           {/* Stats bar */}
           <motion.div
-            className="glass"
-            style={statsBarStyle}
+            className="glass stats-responsive"
+            style={{ borderRadius: 16, marginBottom: 28, boxShadow: 'var(--shadow-sm)' }}
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
             <StatItem label="Projects" value={projects.length} delay={0.15} />
-            <div style={statDivider} />
+            <div className="stat-divider" style={statDivider} />
             <StatItem label="Ventures" value={ventures.length} delay={0.2} />
-            <div style={statDivider} />
+            <div className="stat-divider" style={statDivider} />
             <StatItem label="Modules" value={MODULES.length} delay={0.25} />
-            <div style={statDivider} />
+            <div className="stat-divider" style={statDivider} />
             <StatItem label="AI Agents" value={6} delay={0.3} />
           </motion.div>
 
           {/* Project grid */}
           <motion.div
-            style={gridStyle}
+            className="grid-responsive"
             initial="hidden" animate="show"
             variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.07 } } }}
           >
@@ -750,7 +751,6 @@ function StatItem({ label, value, delay = 0 }: { label: string; value: number; d
 
 const pageStyle: React.CSSProperties = {
   minHeight: '100vh',
-  padding: '40px 32px',
   display: 'flex',
   justifyContent: 'center',
   position: 'relative',

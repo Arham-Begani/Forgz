@@ -288,7 +288,7 @@ export default function ManageProjectsPage() {
                 >
                   <div className="glass-card" style={projectCardStyle}>
                     {/* Main row */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                       {/* Icon */}
                       <div
                         style={{
@@ -303,7 +303,7 @@ export default function ManageProjectsPage() {
                       </div>
 
                       {/* Info */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ flex: '1 1 220px', minWidth: 0 }}>
                         {renamingId === project.id ? (
                           <input
                             ref={renameRef}
@@ -355,7 +355,7 @@ export default function ManageProjectsPage() {
                       </div>
 
                       {/* Actions */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, flexWrap: 'wrap' }}>
                         {/* Expand ventures */}
                         <motion.button
                           onClick={() => setExpandedId(isExpanded ? null : project.id)}
@@ -555,7 +555,7 @@ export default function ManageProjectsPage() {
 
 const pageStyle: React.CSSProperties = {
   minHeight: '100vh',
-  padding: '32px 32px',
+  padding: 'clamp(16px, 4vw, 32px)',
   display: 'flex',
   justifyContent: 'center',
 }

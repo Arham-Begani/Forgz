@@ -191,10 +191,10 @@ export default function CohortDashboardPage() {
     const comparison = cohort.comparison as any
 
     return (
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 20px' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', padding: 'clamp(16px, 4vw, 32px) 20px' }}>
             {/* Header */}
             <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 32 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
                     <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--text)' }}>
                         {cohort.name}
                     </h1>
@@ -218,7 +218,7 @@ export default function CohortDashboardPage() {
 
             {/* Launch button (draft state) */}
             {cohort.status === 'draft' && cohort.ventures.length >= 2 && (
-                <div style={{ display: 'flex', gap: 12, marginBottom: 32 }}>
+                <div style={{ display: 'flex', gap: 12, marginBottom: 32, flexWrap: 'wrap' }}>
                     <motion.button
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
@@ -268,7 +268,7 @@ export default function CohortDashboardPage() {
                     <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--muted)', letterSpacing: '0.08em', marginBottom: 16, textTransform: 'uppercase' }}>
                         Variants
                     </h2>
-                    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(cohort.ventures.length, 3)}, 1fr)`, gap: 16 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
                         {cohort.ventures.map((venture) => {
                             const state = agentStates[venture.id]
                             const isWinner = cohort.winner_id === venture.id
@@ -384,7 +384,8 @@ export default function CohortDashboardPage() {
                             overflow: 'hidden',
                             marginBottom: 24,
                         }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                            <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 640 }}>
                                 <thead>
                                     <tr style={{ borderBottom: '1px solid var(--border)' }}>
                                         <th style={{ padding: '12px 16px', textAlign: 'left', color: 'var(--text-soft)', fontWeight: 600 }}>
@@ -456,6 +457,7 @@ export default function CohortDashboardPage() {
                                     )}
                                 </tbody>
                             </table>
+                            </div>
                         </div>
                     )}
 
@@ -492,7 +494,7 @@ export default function CohortDashboardPage() {
                             <p style={{ fontSize: 14, color: 'var(--text-soft)', lineHeight: 1.6, marginBottom: 12 }}>
                                 {comparison.recommendedWinner.rationale}
                             </p>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
                                 <div style={{ padding: 12, borderRadius: 10, background: 'rgba(90, 140, 110, 0.06)', border: '1px solid rgba(90, 140, 110, 0.15)' }}>
                                     <div style={{ fontSize: 11, fontWeight: 600, color: '#5A8C6E', marginBottom: 4 }}>PRIMARY ADVANTAGE</div>
                                     <div style={{ fontSize: 13, color: 'var(--text)' }}>{comparison.recommendedWinner.primaryAdvantage}</div>
@@ -506,7 +508,7 @@ export default function CohortDashboardPage() {
                     )}
 
                     {/* Runner-up + Hybrid */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginBottom: 24 }}>
                         {comparison.runnerUpCase && (
                             <div style={{
                                 background: 'var(--card)',
@@ -581,7 +583,7 @@ export default function CohortDashboardPage() {
                             <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 12 }}>
                                 Pick Your Winner
                             </h3>
-                            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cohort.ventures.length}, 1fr)`, gap: 12 }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
                                 {cohort.ventures.map((v) => (
                                     <motion.button
                                         key={v.id}

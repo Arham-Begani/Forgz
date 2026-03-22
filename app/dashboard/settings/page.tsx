@@ -116,7 +116,7 @@ type ThemeId = typeof THEMES[number]['id']
 
 function ThemePicker({ currentTheme, onSelect }: { currentTheme: ThemeId; onSelect: (id: ThemeId) => void }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
       {THEMES.map((t, i) => {
         const active = currentTheme === t.id
         return (
@@ -352,6 +352,7 @@ function SettingRow({ icon, title, description, children, delay = 0 }: {
       style={{
         display: 'flex',
         alignItems: 'center',
+        flexWrap: 'wrap',
         gap: 16,
         padding: '18px 20px',
         borderRadius: 14,
@@ -378,7 +379,7 @@ function SettingRow({ icon, title, description, children, delay = 0 }: {
         <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', lineHeight: 1.3 }}>{title}</div>
         <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2, lineHeight: 1.5 }}>{description}</div>
       </div>
-      <div style={{ flexShrink: 0 }}>
+      <div style={{ flexShrink: 0, marginLeft: 'auto' }}>
         {children}
       </div>
     </motion.div>
@@ -912,8 +913,15 @@ export default function SettingsPage() {
               </div>
               <motion.button
                 onClick={async () => {
-                  await fetch('/api/auth/signout', { method: 'POST' })
-                  router.push('/signin')
+                  const res = await fetch('/api/auth/signout', { method: 'POST' })
+                  if (!res.ok) {
+                    const err = await res.json().catch(() => null)
+                    alert(err?.error || 'Unable to sign out. Please try again.')
+                    return
+                  }
+
+                  router.replace('/signin')
+                  router.refresh()
                 }}
                 whileHover={{ scale: 1.03, background: 'rgba(220, 38, 38, 0.12)' }}
                 whileTap={{ scale: 0.97 }}

@@ -180,7 +180,7 @@ export default function NewCohortPage() {
     }
 
     return (
-        <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 20px' }}>
+        <div style={{ maxWidth: 800, margin: '0 auto', padding: 'clamp(16px, 4vw, 40px) 20px' }}>
             {/* Header */}
             <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
                 <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>
@@ -222,7 +222,7 @@ export default function NewCohortPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}
+                        style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 20 }}
                     >
                         <motion.button
                             whileHover={{ scale: 1.02 }}
@@ -275,7 +275,7 @@ export default function NewCohortPage() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                     >
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 10 }}>
                             <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)' }}>
                                 Variants ({variants.length})
                             </h2>
@@ -325,7 +325,7 @@ export default function NewCohortPage() {
                                             placeholder="Description (2-3 sentences)"
                                             style={{ ...inputStyle, minHeight: 60, resize: 'vertical' as const }}
                                         />
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
                                             <input
                                                 value={v.targetAudience}
                                                 onChange={e => updateVariant(i, 'targetAudience', e.target.value)}
