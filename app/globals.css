@@ -984,6 +984,262 @@ button, a {
 
 /* ─── Responsive Design ─────────────────────────────────────────────────── */
 
+/* Hide on mobile, show on desktop */
+.hide-mobile { display: none; }
+.show-mobile { display: block; }
+.show-mobile-flex { display: flex; }
+
+@media (min-width: 1024px) {
+  .hide-mobile { display: block; }
+  .hide-mobile-flex { display: flex; }
+  .show-mobile { display: none; }
+  .show-mobile-flex { display: none; }
+}
+
+/* Sidebar: hidden off-screen on mobile, visible on desktop */
+.sidebar-desktop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  transform: translateX(-100%);
+  z-index: 50;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sidebar-desktop.mobile-open {
+  transform: translateX(0);
+}
+
+@media (min-width: 1024px) {
+  .sidebar-desktop {
+    position: relative;
+    transform: none;
+  }
+  .sidebar-desktop.mobile-open {
+    transform: none;
+  }
+}
+
+/* Main content: no left offset on mobile */
+.main-content {
+  margin-left: 0;
+}
+@media (min-width: 1024px) {
+  .main-content {
+    margin-left: 0; /* sidebar is in-flow on desktop */
+  }
+}
+
+/* Mobile hamburger: show on mobile, hide on desktop */
+.mobile-hamburger {
+  display: flex;
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 30;
+}
+@media (min-width: 1024px) {
+  .mobile-hamburger {
+    display: none;
+  }
+}
+
+/* Mobile overlay */
+.mobile-overlay {
+  display: block;
+}
+@media (min-width: 1024px) {
+  .mobile-overlay {
+    display: none;
+  }
+}
+
+/* ─── Responsive Page Padding ──────────────────────────────────────────── */
+.page-responsive {
+  padding: 20px 16px;
+}
+@media (min-width: 640px) {
+  .page-responsive {
+    padding: 28px 24px;
+  }
+}
+@media (min-width: 1024px) {
+  .page-responsive {
+    padding: 40px 32px;
+  }
+}
+
+/* ─── Responsive Grid ──────────────────────────────────────────────────── */
+.grid-responsive {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+@media (min-width: 640px) {
+  .grid-responsive {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+@media (min-width: 1024px) {
+  .grid-responsive {
+    grid-template-columns: repeat(auto-fill, minmax(248px, 1fr));
+    gap: 16px;
+  }
+}
+
+/* ─── Responsive Stats Bar ─────────────────────────────────────────────── */
+.stats-responsive {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding: 16px;
+}
+.stats-responsive .stat-divider {
+  display: none;
+}
+@media (min-width: 640px) {
+  .stats-responsive {
+    display: flex;
+    align-items: center;
+    padding: 18px 0;
+    gap: 0;
+  }
+  .stats-responsive .stat-divider {
+    display: block;
+  }
+}
+
+/* ─── Responsive Typography ────────────────────────────────────────────── */
+.heading-responsive {
+  font-size: 24px;
+}
+@media (min-width: 640px) {
+  .heading-responsive {
+    font-size: 28px;
+  }
+}
+@media (min-width: 1024px) {
+  .heading-responsive {
+    font-size: 32px;
+  }
+}
+
+/* ─── Responsive Quick Actions ─────────────────────────────────────────── */
+.quick-actions-responsive {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.quick-actions-responsive::-webkit-scrollbar {
+  display: none;
+}
+@media (min-width: 640px) {
+  .quick-actions-responsive {
+    gap: 10px;
+    overflow-x: visible;
+  }
+}
+
+/* ─── Responsive Analytics Cards ───────────────────────────────────────── */
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+@media (min-width: 640px) {
+  .analytics-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+}
+@media (min-width: 1024px) {
+  .analytics-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+}
+
+/* ─── Responsive Table ─────────────────────────────────────────────────── */
+.table-responsive-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.table-responsive-wrap table {
+  min-width: 600px;
+}
+@media (min-width: 768px) {
+  .table-responsive-wrap table {
+    min-width: auto;
+  }
+}
+
+/* ─── Venture Dashboard Tabs ───────────────────────────────────────────── */
+.venture-tabs-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.venture-tabs-responsive::-webkit-scrollbar {
+  display: none;
+}
+
+/* ─── Module Page Responsive ───────────────────────────────────────────── */
+.module-page-padding {
+  padding: 16px;
+}
+@media (min-width: 640px) {
+  .module-page-padding {
+    padding: 24px;
+  }
+}
+@media (min-width: 1024px) {
+  .module-page-padding {
+    padding: 32px;
+  }
+}
+
+/* ─── Settings Grid ────────────────────────────────────────────────────── */
+.settings-grid-responsive {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+@media (min-width: 640px) {
+  .settings-grid-responsive {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+}
+@media (min-width: 1024px) {
+  .settings-grid-responsive {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+  }
+}
+
+/* ─── No scrollbar utility ─────────────────────────────────────────────── */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ─── OTP Input Responsive ─────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .otp-digit {
+    width: 40px !important;
+    height: 48px !important;
+    font-size: 1.25rem !important;
+  }
+}
+
 /* Tablet and below */
 @media (max-width: 1024px) {
   .reading-panel {
@@ -1047,6 +1303,12 @@ button, a {
   .markdown-report h3 { font-size: 1.2em !important; }
   .markdown-report p { font-size: 0.95rem !important; }
   .markdown-report table { font-size: 13px; }
+
+  /* Auth cards full width on mobile */
+  .glass-auth-card {
+    border-radius: 16px;
+    margin: 0 4px;
+  }
 }
 
 /* Small mobile */
@@ -1057,5 +1319,10 @@ button, a {
 
   .report-modal-content {
     padding: 20px 16px !important;
+  }
+
+  .glass-auth-card {
+    border-radius: 12px;
+    padding: 24px 20px 20px !important;
   }
 }

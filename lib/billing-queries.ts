@@ -213,12 +213,20 @@ export async function getBillingSnapshot(userId: string, db?: DbClient): Promise
   const plan = getPlanConfig(planSlug)
   const hasUnlimitedAccess = hasUnlimitedBillingOverride(email)
 
+  // Auto-grant free tier credits to new free users who have zero balance
+  let finalCredits = creditsRemaining
+  if (planSlug === 'free' && !hasUnlimitedAccess && creditsRemaining === 0) {
+    await grantFreeCreditsIfNeeded(userId, client)
+    // Re-fetch balance after potential grant
+    finalCredits = await getCreditBalance(userId, client)
+  }
+
   return {
     planSlug,
     planLabel: hasUnlimitedAccess ? 'Unlimited' : formatPlanLabel(planSlug),
     billingPeriod: subscription?.billing_period ?? null,
     subscriptionStatus: subscription?.status ?? 'free',
-    creditsRemaining: hasUnlimitedAccess ? UNLIMITED_BILLING_CREDIT_BALANCE : creditsRemaining,
+    creditsRemaining: hasUnlimitedAccess ? UNLIMITED_BILLING_CREDIT_BALANCE : finalCredits,
     allowedModules: hasUnlimitedAccess ? ALL_BILLING_MODULES : plan.allowedModules,
     ventureLimit: hasUnlimitedAccess ? UNLIMITED_BILLING_VENTURE_LIMIT : plan.ventureLimit,
     monthlyCredits: hasUnlimitedAccess ? UNLIMITED_BILLING_CREDIT_BALANCE : plan.monthlyCredits,
@@ -482,6 +490,35 @@ async function grantCreditsIfNeeded(input: {
   })
 
   if (error) throw new Error(`grantCreditsIfNeeded failed: ${error.message}`)
+}
+
+// Auto-grant free tier credits to users who have never received any credits.
+// Free users don't go through a purchase flow, so they never trigger grantCreditsIfNeeded.
+// This runs lazily inside getBillingSnapshot() on first access.
+async function grantFreeCreditsIfNeeded(userId: string, db: DbClient): Promise<void> {
+  // Check if this user has ANY credit_ledger entries at all
+  const { count, error: countError } = await db
+    .from('credit_ledger')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+
+  if (countError || (count ?? 0) > 0) return // Already has ledger entries, skip
+
+  const freeCredits = BILLING_PLANS.free.monthlyCredits
+  if (freeCredits <= 0) return
+
+  // Use 'manual_adjustment' kind (allowed by DB CHECK constraint) with metadata
+  // to identify this as a free tier grant
+  const { error } = await db.from('credit_ledger').insert({
+    user_id: userId,
+    kind: 'manual_adjustment',
+    credits: freeCredits,
+    metadata: { reason: 'free_tier_initial_grant', planSlug: 'free' },
+  })
+
+  if (error) {
+    console.warn(`[billing] Free credit grant failed for ${userId}: ${error.message}`)
+  }
 }
 
 export async function assertCanRunModule(userId: string, moduleId: BillingModuleId, db?: DbClient) {

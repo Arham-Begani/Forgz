@@ -234,7 +234,7 @@ export function BillingPanel() {
               </div>
             ) : null}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(140px, 1fr))', gap: 10, minWidth: 280 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, width: '100%', maxWidth: 420 }}>
             <MetricCard
               label="Venture limit"
               value={hasUnlimitedAccess ? `${billing?.activeVentureCount ?? 0}/Unlimited` : `${billing?.activeVentureCount ?? 0}/${currentPlan.ventureLimit}`}
@@ -281,7 +281,7 @@ export function BillingPanel() {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
           Billing cycle
         </div>
@@ -404,6 +404,7 @@ export function BillingPanel() {
                   display: 'flex',
                   justifyContent: 'space-between',
                   gap: 12,
+                  flexWrap: 'wrap',
                   padding: '12px 14px',
                   borderRadius: 12,
                   background: 'var(--glass-bg)',
