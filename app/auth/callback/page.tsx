@@ -1,12 +1,12 @@
 'use client'
 
 import { createClient } from '@/lib/supabase/client'
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 type EmailOtpType = 'email' | 'signup' | 'magiclink' | 'recovery' | 'invite' | 'email_change'
 
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const didRunRef = useRef(false)
@@ -73,6 +73,24 @@ export default function AuthCallbackPage() {
     }
   }, [router, searchParams])
 
+  return <AuthCallbackShell message={message} status={status} />
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={<AuthCallbackShell message="Completing sign in..." status="loading" />}>
+      <AuthCallbackContent />
+    </Suspense>
+  )
+}
+
+function AuthCallbackShell({
+  message,
+  status,
+}: {
+  message: string
+  status: 'loading' | 'error' | 'success'
+}) {
   return (
     <main style={pageStyle}>
       <div style={cardStyle}>
