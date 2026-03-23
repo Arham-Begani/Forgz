@@ -1,5 +1,5 @@
 -- 006_expand_conversation_module_ids.sql
--- Allow newer Forge modules to create conversation rows without failing the module_id check.
+-- Allow newer Forze modules to create conversation rows without failing the module_id check.
 
 ALTER TABLE conversations
   DROP CONSTRAINT IF EXISTS conversations_module_id_check;

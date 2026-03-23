@@ -1,4 +1,4 @@
--- 001_initial.sql — Forge schema
+-- 001_initial.sql — Forze schema
 
 -- Users (Synchronized with auth.users via 000_supabase_auth_sync.sql)
 CREATE TABLE IF NOT EXISTS users (
