@@ -12,6 +12,7 @@ function AuthCallbackContent() {
   const didRunRef = useRef(false)
   const [message, setMessage] = useState('Completing sign in...')
   const [status, setStatus] = useState<'loading' | 'error' | 'success'>('loading')
+  const event = searchParams.get('event')
 
   useEffect(() => {
     if (didRunRef.current) return
@@ -50,6 +51,13 @@ function AuthCallbackContent() {
         }
 
         if (active) {
+          if (event === 'email_confirmed') {
+            await fetch('/api/auth/notify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ event: 'email_confirmed' }),
+            }).catch(() => null)
+          }
           setStatus('success')
           setMessage('You are signed in. Taking you to Forze...')
           router.replace('/dashboard')
@@ -71,7 +79,7 @@ function AuthCallbackContent() {
     return () => {
       active = false
     }
-  }, [router, searchParams])
+  }, [event, router, searchParams])
 
   return <AuthCallbackShell message={message} status={status} />
 }

@@ -43,6 +43,12 @@ export default function SignInPage() {
       });
       if (authError) throw authError;
 
+      await fetch('/api/auth/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event: 'login' }),
+      }).catch(() => null);
+
       window.location.href = "/dashboard";
     } catch (err) {
       const raw = err instanceof Error ? err.message : "";
@@ -74,7 +80,7 @@ export default function SignInPage() {
     try {
       const supabase = createClient();
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
+        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password`,
       });
       if (resetError) throw resetError;
       setResetMessage("Password reset link sent. Check your inbox.");

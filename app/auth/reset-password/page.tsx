@@ -66,6 +66,12 @@ export default function ResetPasswordPage() {
       const { error: updateError } = await supabase.auth.updateUser({ password })
       if (updateError) throw updateError
 
+      await fetch('/api/auth/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event: 'password_changed' }),
+      }).catch(() => null)
+
       setMessage('Your password has been updated. Redirecting you back into Forze...')
       router.replace('/dashboard')
       router.refresh()
