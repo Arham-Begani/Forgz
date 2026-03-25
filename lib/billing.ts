@@ -11,7 +11,7 @@ export type BillingModuleId =
   | 'launch-autopilot'
   | 'mvp-scalpel'
 
-export type PlanSlug = 'free' | 'builder' | 'pro' | 'studio'
+export type PlanSlug = 'free' | 'starter' | 'builder' | 'pro' | 'studio'
 export type BillingPeriod = 'monthly' | 'yearly'
 export type TopupSlug = 'topup-50' | 'topup-175'
 
@@ -81,17 +81,14 @@ export const MODULE_CREDIT_COSTS: Record<BillingModuleId, number> = {
   'full-launch': 30,
 }
 
-const FREE_MODULES: BillingModuleId[] = ['general', 'research', 'branding']
-const BUILDER_MODULES: BillingModuleId[] = [
+const FREE_MODULES: BillingModuleId[] = ['general', 'research']
+const STARTER_MODULES: BillingModuleId[] = [
   'general',
   'research',
   'branding',
   'marketing',
-  'landing',
   'mvp-scalpel',
 ]
-
-const PRO_MODULES: BillingModuleId[] = ALL_BILLING_MODULES
 
 export const BILLING_PLANS: Record<PlanSlug, BillingPlan> = {
   free: {
@@ -100,39 +97,49 @@ export const BILLING_PLANS: Record<PlanSlug, BillingPlan> = {
     monthlyPriceInr: 0,
     yearlyPriceInr: 0,
     ventureLimit: 1,
-    monthlyCredits: 20,
+    monthlyCredits: 15,
     allowedModules: FREE_MODULES,
     cta: 'Start free',
+  },
+  starter: {
+    slug: 'starter',
+    label: 'Starter',
+    monthlyPriceInr: 299,
+    yearlyPriceInr: 2990,
+    ventureLimit: 2,
+    monthlyCredits: 40,
+    allowedModules: STARTER_MODULES,
+    cta: 'Get Started',
   },
   builder: {
     slug: 'builder',
     label: 'Builder',
-    monthlyPriceInr: 999,
-    yearlyPriceInr: 9990,
-    ventureLimit: 2,
+    monthlyPriceInr: 899,
+    yearlyPriceInr: 8990,
+    ventureLimit: 5,
     monthlyCredits: 120,
-    allowedModules: BUILDER_MODULES,
+    allowedModules: ALL_BILLING_MODULES,
     cta: 'Upgrade to Builder',
   },
   pro: {
     slug: 'pro',
     label: 'Pro',
-    monthlyPriceInr: 2499,
-    yearlyPriceInr: 24990,
-    ventureLimit: 5,
-    monthlyCredits: 350,
-    allowedModules: PRO_MODULES,
+    monthlyPriceInr: 2999,
+    yearlyPriceInr: 29990,
+    ventureLimit: 15,
+    monthlyCredits: 400,
+    allowedModules: ALL_BILLING_MODULES,
     cta: 'Go Pro',
     highlight: true,
   },
   studio: {
     slug: 'studio',
     label: 'Studio',
-    monthlyPriceInr: 6999,
-    yearlyPriceInr: 69990,
-    ventureLimit: 15,
-    monthlyCredits: 1200,
-    allowedModules: PRO_MODULES,
+    monthlyPriceInr: 7999,
+    yearlyPriceInr: 79990,
+    ventureLimit: UNLIMITED_BILLING_VENTURE_LIMIT,
+    monthlyCredits: 1500,
+    allowedModules: ALL_BILLING_MODULES,
     cta: 'Scale with Studio',
   },
 }
@@ -140,15 +147,15 @@ export const BILLING_PLANS: Record<PlanSlug, BillingPlan> = {
 export const TOPUP_PRODUCTS: Record<TopupSlug, TopupProduct> = {
   'topup-50': {
     slug: 'topup-50',
-    label: '50 Credits',
+    label: '60 Credits',
     amountInr: 499,
-    credits: 50,
+    credits: 60,
   },
   'topup-175': {
     slug: 'topup-175',
-    label: '175 Credits',
+    label: '200 Credits',
     amountInr: 1499,
-    credits: 175,
+    credits: 200,
   },
 }
 
@@ -198,5 +205,5 @@ export function hasUnlimitedBillingOverride(email: string | null | undefined): b
   return [...DEFAULT_UNLIMITED_BILLING_EMAILS, ...configuredEmails].includes(normalizedEmail)
 }
 
-export const PLAN_SEQUENCE: PlanSlug[] = ['free', 'builder', 'pro', 'studio']
+export const PLAN_SEQUENCE: PlanSlug[] = ['free', 'starter', 'builder', 'pro', 'studio']
 export const TOPUP_SEQUENCE: TopupSlug[] = ['topup-50', 'topup-175']

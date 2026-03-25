@@ -28,7 +28,7 @@ import { z } from 'zod'
 const CreatePlanSchema = z.object({
   mode: z.literal('create'),
   kind: z.literal('plan'),
-  planSlug: z.enum(['builder', 'pro', 'studio']),
+  planSlug: z.enum(['starter', 'builder', 'pro', 'studio']),
   billingPeriod: z.enum(['monthly', 'yearly']),
 })
 
@@ -41,7 +41,7 @@ const CreateTopupSchema = z.object({
 const ConfirmPlanSchema = z.object({
   mode: z.literal('confirm'),
   kind: z.literal('plan'),
-  planSlug: z.enum(['builder', 'pro', 'studio']),
+  planSlug: z.enum(['starter', 'builder', 'pro', 'studio']),
   billingPeriod: z.enum(['monthly', 'yearly']),
   razorpayPaymentId: z.string().min(1),
   razorpaySubscriptionId: z.string().min(1),
