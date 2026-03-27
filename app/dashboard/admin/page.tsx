@@ -20,6 +20,8 @@ interface AdminAnalytics {
     successRate: number
     totalCohorts: number
     totalInvestorKitViews: number
+    timezone?: string
+    todayDate?: string
   }
   revenue: {
     totalRevenue: number
@@ -40,7 +42,7 @@ interface AdminAnalytics {
     plan: string
     createdAt: string
     runs: number
-    credits: number
+    credits: number | string
     ventures: number
   }[]
   creditEconomy: {
@@ -83,7 +85,7 @@ const MODULE_COLORS: Record<string, string> = {
 }
 
 const PLAN_COLORS: Record<string, string> = {
-  free: '#71717a', builder: '#3b82f6', pro: '#C4975A', studio: '#a855f7',
+  free: '#71717a', starter: '#0f766e', builder: '#3b82f6', pro: '#C4975A', studio: '#a855f7', unlimited: '#dc2626',
 }
 
 // ─── Component ──────────────────────────────────────────────────────────────────
@@ -97,12 +99,15 @@ export default function AdminAnalyticsPage() {
     try {
       setLoading(true)
       setError(null)
-      const res = await fetch('/api/admin/analytics')
+      const res = await fetch('/api/admin/analytics', { cache: 'no-store' })
       if (res.status === 401) {
         setError('Access denied. Admin privileges required.')
         return
       }
-      if (!res.ok) throw new Error('Failed to load admin analytics')
+      if (!res.ok) {
+        const payload = await res.json().catch(() => null)
+        throw new Error(payload?.error || 'Failed to load admin analytics')
+      }
       setData(await res.json())
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load')
@@ -136,7 +141,7 @@ export default function AdminAnalyticsPage() {
             Admin Dashboard
           </h1>
           <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4 }}>
-            Platform-wide analytics
+            Platform-wide analytics {platform.timezone ? `· ${platform.timezone}` : ''}
           </p>
         </div>
         <motion.button
@@ -310,7 +315,7 @@ export default function AdminAnalyticsPage() {
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
             <span style={{ fontSize: 10, color: 'var(--muted)' }}>{dailyActivity[0]?.date?.slice(5)}</span>
-            <span style={{ fontSize: 10, color: 'var(--muted)' }}>Today</span>
+            <span style={{ fontSize: 10, color: 'var(--muted)' }}>{platform.todayDate || 'Today'}</span>
           </div>
           {/* Signup sparkline */}
           <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid var(--border)' }}>
@@ -347,7 +352,7 @@ export default function AdminAnalyticsPage() {
                 <th style={thStyle}>User</th>
                 <th style={{ ...thStyle, textAlign: 'center' }}>Plan</th>
                 <th style={{ ...thStyle, textAlign: 'center' }}>Runs</th>
-                <th style={{ ...thStyle, textAlign: 'center' }}>Credits</th>
+                <th style={{ ...thStyle, textAlign: 'center' }}>Balance</th>
                 <th style={{ ...thStyle, textAlign: 'center' }}>Ventures</th>
                 <th style={{ ...thStyle, textAlign: 'right' }}>Joined</th>
               </tr>
