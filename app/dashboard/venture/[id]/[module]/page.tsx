@@ -12,6 +12,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { AgentStatusRow } from '@/components/ui/AgentStatusRow'
 import { ResultCard } from '@/components/ui/ResultCard'
+import { ConnectedChannelsPanel } from '@/components/marketing/ConnectedChannelsPanel'
 import ReactMarkdown from 'react-markdown'
 import { getModuleCost } from '@/lib/billing'
 import { downloadPDFFromResult, downloadPDFFromElement } from '@/lib/client-pdf'
@@ -1385,6 +1386,14 @@ export default function ModulePage() {
                   </motion.div>
                 )}
               </AnimatePresence>
+            )}
+
+            {mounted && activeModule === 'marketing' && (
+              <ConnectedChannelsPanel
+                ventureId={ventureId}
+                ventureName={ventureName}
+                billing={billing}
+              />
             )}
 
             {/* Conversations */}
