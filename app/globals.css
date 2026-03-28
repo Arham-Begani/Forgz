@@ -1310,3 +1310,28 @@ button, a {
     padding: 24px 20px 20px !important;
   }
 }
+
+/* ─── Mobile Dashboard Tweaks ──────────────────────────────────────────── */
+@media (max-width: 1023px) {
+  /* Add top padding for hamburger on mobile dashboard */
+  .flex.h-\[100dvh\] > main {
+    padding-top: 56px;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Module page grid fixes */
+  .module-page-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ─── Landing Page Mobile Overrides ────────────────────────────────────── */
+@media (max-width: 640px) {
+  /* OutputTabs tab bar: scroll horizontally instead of wrapping */
+  #features .flex-wrap {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
