@@ -42,11 +42,11 @@ function ResearchPreview() {
             <div key={i} style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr auto',
-              gap: '12px',
-              padding: '10px 14px',
+              gap: '8px',
+              padding: '10px 12px',
               borderBottom: i < 2 ? '1px solid var(--border)' : 'none',
               alignItems: 'center',
-              fontSize: '13px',
+              fontSize: '12px',
             }}>
               <span style={{ fontFamily: 'var(--font-dm-sans)', color: 'var(--text)', fontWeight: 500 }}>{row.name}</span>
               <span style={{ fontFamily: 'var(--font-dm-sans)', color: 'var(--muted)', fontSize: '12px' }}>{row.gap}</span>
@@ -72,7 +72,7 @@ function BrandingPreview() {
       {/* Color palette */}
       <div>
         <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '11px', color: 'var(--muted)', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>Brand Palette</p>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
           {[
             { hex: '#1A1F2E', label: 'Deep Navy' },
             { hex: '#2D6BE4', label: 'Electric' },
@@ -80,9 +80,9 @@ function BrandingPreview() {
             { hex: '#F5F7FF', label: 'Cloud' },
             { hex: '#FFB547', label: 'Amber' },
           ].map(c => (
-            <div key={c.hex} style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center' }}>
-              <div style={{ height: '48px', borderRadius: 'var(--radius-sm)', background: c.hex, width: '100%', border: '1px solid var(--border)' }} />
-              <span style={{ fontFamily: 'var(--font-jetbrains-mono)', fontSize: '9px', color: 'var(--muted)', textAlign: 'center' }}>{c.hex}</span>
+            <div key={c.hex} style={{ flex: '1 1 40px', minWidth: '40px', display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center' }}>
+              <div style={{ height: '40px', borderRadius: 'var(--radius-sm)', background: c.hex, width: '100%', border: '1px solid var(--border)' }} />
+              <span style={{ fontFamily: 'var(--font-jetbrains-mono)', fontSize: '8px', color: 'var(--muted)', textAlign: 'center' }}>{c.hex}</span>
             </div>
           ))}
         </div>
@@ -141,7 +141,7 @@ function LandingPreview() {
               <div style={{ padding: '6px 16px', borderRadius: '6px', background: 'transparent', border: '1px solid #ffffff30', fontSize: '10px', color: '#ffffff70', fontFamily: 'var(--font-dm-sans)' }}>Learn More</div>
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: '8px' }}>
             {[0, 1, 2].map(i => (
               <div key={i} style={{ padding: '12px', borderRadius: '8px', background: '#ffffff06', border: '1px solid #ffffff10' }}>
                 <div style={{ width: '20px', height: '20px', borderRadius: '4px', background: '#2D6BE420', marginBottom: '8px' }} />
@@ -152,7 +152,7 @@ function LandingPreview() {
           </div>
         </div>
       </div>
-      <div style={{ display: 'flex', gap: '8px' }}>
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         {['sitemap.xml', 'schema.org', 'lead capture', 'analytics'].map(tag => (
           <span key={tag} style={{ padding: '4px 10px', borderRadius: '999px', background: '#8C7A5A15', border: '1px solid #8C7A5A25', color: '#8C7A5A', fontSize: '11px', fontFamily: 'var(--font-dm-sans)', fontWeight: 500 }}>{tag}</span>
         ))}
@@ -181,7 +181,7 @@ function FeasibilityPreview() {
             { year: 'Year 2', rev: '$680K', net: '$142K', customers: '420' },
             { year: 'Year 3', rev: '$2.1M', net: '$890K', customers: '1,240' },
           ].map((row, i) => (
-            <div key={i} style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr 1fr', gap: '8px', padding: '10px 14px', borderBottom: i < 2 ? '1px solid var(--border)' : 'none', alignItems: 'center', fontSize: '13px' }}>
+            <div key={i} style={{ display: 'grid', gridTemplateColumns: '50px 1fr 1fr 1fr', gap: '6px', padding: '10px 12px', borderBottom: i < 2 ? '1px solid var(--border)' : 'none', alignItems: 'center', fontSize: '12px' }}>
               <span style={{ fontFamily: 'var(--font-jetbrains-mono)', fontSize: '11px', color: 'var(--muted)' }}>{row.year}</span>
               <span style={{ fontFamily: 'var(--font-dm-sans)', color: 'var(--text)', fontWeight: 600 }}>{row.rev}</span>
               <span style={{ fontFamily: 'var(--font-dm-sans)', color: i === 0 ? '#ef4444' : '#22c55e', fontSize: '12px' }}>{row.net}</span>
