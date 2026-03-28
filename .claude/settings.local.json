@@ -36,7 +36,9 @@
       "Bash(find C:/Users/arham/Documents/Github/Forge -name *ForzeUI* -o -name *forze-ui*)",
       "Bash(find C:UsersarhamDocumentsGithubForge -type f -name *.ts -path */agents/*)",
       "Bash(xxd \"C:\\\\Users\\\\arham\\\\Documents\\\\Github\\\\Forge\\\\.env.local\")",
-      "Bash(wc -l \"C:\\\\Users\\\\arham\\\\Documents\\\\Github\\\\Forge\\\\agents\"/*.ts)"
+      "Bash(wc -l \"C:\\\\Users\\\\arham\\\\Documents\\\\Github\\\\Forge\\\\agents\"/*.ts)",
+      "Bash(find /c/Users/arham/Documents/Github/Forge -name *.ts -path */app/api/* -type f)",
+      "Bash(find /c/Users/arham/Documents/Github/Forge/src -type f -name *.ts)"
     ]
   }
 }
