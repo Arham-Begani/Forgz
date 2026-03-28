@@ -30,12 +30,6 @@ const PROVIDERS: Array<{ id: SocialProvider; label: string; description: string 
   },
 ]
 
-function hasBuilderAccess(billing: BillingSummary | null): boolean {
-  if (!billing) return false
-  if (billing.hasUnlimitedAccess) return true
-  return ['builder', 'pro', 'studio'].includes(billing.planSlug)
-}
-
 function toInputDateTime(value: string | null): string {
   if (!value) return ''
   const date = new Date(value)
@@ -403,7 +397,7 @@ function AssetEditorCard({
 export function ConnectedChannelsPanel({
   ventureId,
   ventureName,
-  billing,
+  billing: _billing,
 }: {
   ventureId: string
   ventureName: string
@@ -416,14 +410,7 @@ export function ConnectedChannelsPanel({
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
-  const enabled = hasBuilderAccess(billing)
-
   async function refreshData() {
-    if (!enabled) {
-      setLoading(false)
-      return
-    }
-
     setLoading(true)
     setError(null)
 
@@ -454,7 +441,7 @@ export function ConnectedChannelsPanel({
 
   useEffect(() => {
     refreshData()
-  }, [ventureId, enabled])
+  }, [ventureId])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -545,19 +532,6 @@ export function ConnectedChannelsPanel({
     } finally {
       setBusyProvider(null)
     }
-  }
-
-  if (!enabled) {
-    return (
-      <div style={panelStyle}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>Connected Channels</div>
-          <div style={{ fontSize: 13, color: 'var(--text-soft)', lineHeight: 1.6 }}>
-            Connected channel automation is available on Builder and higher plans. Upgrade to connect YouTube or LinkedIn, create reviewable drafts, and schedule publishes from your marketing output.
-          </div>
-        </div>
-      </div>
-    )
   }
 
   return (

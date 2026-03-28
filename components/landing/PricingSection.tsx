@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { BILLING_PLANS, BILLING_MODULE_LABELS, type PlanSlug } from '@/lib/billing'
+import { BILLING_PLANS, type PlanSlug } from '@/lib/billing'
 
 const PLAN_ORDER: PlanSlug[] = ['free', 'starter', 'builder', 'pro', 'studio']
 
@@ -15,11 +15,11 @@ const PLAN_DESCRIPTIONS: Record<PlanSlug, string> = {
 }
 
 const PLAN_HIGHLIGHTS: Record<PlanSlug, string[]> = {
-  free: ['1 venture', '15 credits / month', 'Research + Co-pilot', 'Community support'],
-  starter: ['2 ventures', '40 credits / month', 'Research, Branding, Marketing, MVP Scalpel', 'Email support'],
-  builder: ['5 ventures', '120 credits / month', 'All 9 agents unlocked', 'Priority support'],
-  pro: ['15 ventures', '400 credits / month', 'All 9 agents unlocked', 'Dedicated support'],
-  studio: ['Unlimited ventures', '1,500 credits / month', 'All 9 agents unlocked', 'White-glove support'],
+  free: ['1 venture', '30 credits / month', 'All modules included', 'Community support'],
+  starter: ['2 ventures', '40 credits / month', 'All modules included', 'Email support'],
+  builder: ['5 ventures', '120 credits / month', 'All modules included', 'Priority support'],
+  pro: ['15 ventures', '400 credits / month', 'All modules included', 'Dedicated support'],
+  studio: ['Unlimited ventures', '1,500 credits / month', 'All modules included', 'White-glove support'],
 }
 
 export function PricingSection() {
@@ -289,7 +289,7 @@ export function PricingSection() {
           opacity: visible ? 1 : 0,
           transition: 'opacity 0.6s 0.4s ease',
         }}>
-          All plans include a 15-credit free trial. No credit card required to start.
+          Start free with 30 monthly credits. No credit card required.
         </p>
       </div>
     </section>

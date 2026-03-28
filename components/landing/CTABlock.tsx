@@ -160,7 +160,7 @@ export function CTABlock() {
           color: 'var(--muted)',
           margin: 0,
         }}>
-          No credit card required · Free tier available · 15 credits included
+          No credit card required · Free tier available · 30 credits included
         </p>
       </div>
     </section>

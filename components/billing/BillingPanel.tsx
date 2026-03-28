@@ -249,7 +249,7 @@ export function BillingPanel() {
             />
             <MetricCard
               label="Modules"
-              value={hasUnlimitedAccess ? 'All modules' : String(currentPlan.allowedModules.length)}
+              value="All modules"
             />
           </div>
         </div>
@@ -328,7 +328,7 @@ export function BillingPanel() {
               <div style={{ marginTop: 12, display: 'grid', gap: 8, fontSize: 13, color: 'var(--text-soft)' }}>
                 <div>{plan.ventureLimit} ventures</div>
                 <div>{plan.monthlyCredits} credits / month</div>
-                <div>{plan.allowedModules.length} unlocked modules</div>
+                <div>All modules included</div>
               </div>
               <button
                 type="button"
@@ -366,24 +366,22 @@ export function BillingPanel() {
                 <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>{topup.credits} extra credits</div>
                 <button
                   type="button"
-                  disabled={hasUnlimitedAccess || billing?.planSlug === 'free' || actionLoading === `topup:${slug}`}
+                  disabled={hasUnlimitedAccess || actionLoading === `topup:${slug}`}
                   onClick={() => startTopupCheckout(slug)}
                   style={{
                     ...secondaryActionBtnStyle,
                     marginTop: 14,
                     width: '100%',
                     justifyContent: 'center',
-                    opacity: hasUnlimitedAccess || billing?.planSlug === 'free' ? 0.55 : 1,
-                    cursor: hasUnlimitedAccess || billing?.planSlug === 'free' ? 'default' : 'pointer',
+                    opacity: hasUnlimitedAccess ? 0.55 : 1,
+                    cursor: hasUnlimitedAccess ? 'default' : 'pointer',
                   }}
                 >
                   {hasUnlimitedAccess
                     ? 'Not needed'
                     : actionLoading === `topup:${slug}`
                       ? 'Opening checkout...'
-                      : billing?.planSlug === 'free'
-                        ? 'Upgrade first'
-                        : 'Buy top-up'}
+                      : 'Buy top-up'}
                 </button>
               </div>
             )

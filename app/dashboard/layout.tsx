@@ -273,11 +273,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     return pathname === `/dashboard/venture/${ventureId}/${moduleId}`
   }
 
-  function isModuleUnlocked(moduleId: string): boolean {
-    if (!session?.allowedModules?.length) return true
-    return session.allowedModules.includes(moduleId)
-  }
-
   function getVenturesForProject(projectId: string) {
     return ventures.filter(v => v.project_id === projectId)
   }
@@ -773,7 +768,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                                         </div>
                                         {groupModules.map((m, idx) => {
                                           const active = isModuleActive(v.id, m.id)
-                                          const unlocked = isModuleUnlocked(m.id)
                                           return (
                                             <motion.button
                                               key={m.id}
@@ -796,30 +790,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                                                 textAlign: 'left',
                                                 fontFamily: 'inherit',
                                                 transition: 'background 150ms ease',
-                                                background: active ? `${m.accent}12` : unlocked ? 'transparent' : 'rgba(255,255,255,0.02)',
+                                                background: active ? `${m.accent}12` : 'transparent',
                                                 borderLeft: active ? `2px solid ${m.accent}` : '2px solid transparent',
-                                                opacity: unlocked ? 1 : 0.76,
+                                                opacity: 1,
                                               }}
                                             >
                                               <span style={{ color: m.accent, fontSize: 11, lineHeight: 1, width: 14, textAlign: 'center' as const }}>{m.icon}</span>
-                                              <span style={{ fontSize: 11.5, color: active ? 'var(--text)' : unlocked ? 'var(--text-soft)' : 'var(--muted)', fontWeight: active ? 600 : 500 }}>{m.label}</span>
-                                              {!unlocked ? (
-                                                <span
-                                                  style={{
-                                                    marginLeft: 'auto',
-                                                    fontSize: 8,
-                                                    fontWeight: 800,
-                                                    letterSpacing: '0.04em',
-                                                    textTransform: 'uppercase',
-                                                    color: 'var(--muted)',
-                                                    border: '1px solid var(--border)',
-                                                    borderRadius: 999,
-                                                    padding: '2px 6px',
-                                                  }}
-                                                >
-                                                  Locked
-                                                </span>
-                                              ) : active && (
+                                              <span style={{ fontSize: 11.5, color: active ? 'var(--text)' : 'var(--text-soft)', fontWeight: active ? 600 : 500 }}>{m.label}</span>
+                                              {active && (
                                                 <motion.div
                                                   layoutId="module-active-dot"
                                                   style={{ width: 4, height: 4, borderRadius: '50%', background: m.accent, marginLeft: 'auto', flexShrink: 0 }}

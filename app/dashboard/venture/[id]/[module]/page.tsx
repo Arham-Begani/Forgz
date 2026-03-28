@@ -901,22 +901,18 @@ export default function ModulePage() {
   const [pickerOpen, setPickerOpen] = useState(false)
   const hasMessages = conversations.length > 0 && historyLoaded
   const moduleCreditCost = getModuleCost(activeModule)
-  const moduleLocked = !!billing && !billing.allowedModules.includes(activeModule)
   const hasEnoughCredits = !billing || billing.hasUnlimitedAccess || billing.creditsRemaining >= moduleCreditCost
   const creditsShortfall = billing && !billing.hasUnlimitedAccess ? Math.max(moduleCreditCost - billing.creditsRemaining, 0) : 0
-  const canAccessInvestorKit = !billing || billing.allowedModules.includes('investor-kit')
+  const canAccessInvestorKit = true
 
   function getRunGuardMessage() {
-    if (moduleLocked) {
-      return `${mod.label} is locked on your ${billing?.planLabel ?? 'current'} plan. Upgrade in Billing to unlock it.`
-    }
     if (billing && !hasEnoughCredits) {
       return `You need ${creditsShortfall} more credit${creditsShortfall === 1 ? '' : 's'} to run ${mod.label}. Open Billing to top up.`
     }
     return null
   }
 
-  const canSubmit = !!prompt.trim() && !isSubmitting && !isLoadingQuestions && !moduleLocked && hasEnoughCredits
+  const canSubmit = !!prompt.trim() && !isSubmitting && !isLoadingQuestions && hasEnoughCredits
 
   // Compute latest result for reading panel
   const latestResult = [...conversations]
@@ -1202,7 +1198,7 @@ export default function ModulePage() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-              {(moduleLocked || !hasEnoughCredits) && (
+              {!hasEnoughCredits && (
                 <button
                   type="button"
                   onClick={() => router.push('/dashboard/settings')}
@@ -2121,7 +2117,6 @@ export default function ModulePage() {
                             transition={{ duration: 0.18, ease: 'easeOut' }}
                           >
                             {MODULES.map(m => {
-                              const unlocked = !billing || billing.allowedModules.includes(m.id)
                               return (
                                 <motion.button
                                   key={m.id}
@@ -2130,33 +2125,17 @@ export default function ModulePage() {
                                   style={{
                                     ...pickerOptionStyle,
                                     background: m.id === activeModule ? `${m.accent}12` : 'transparent',
-                                    opacity: unlocked ? 1 : 0.72,
+                                    opacity: 1,
                                   }}
                                   whileHover={{ backgroundColor: `${m.accent}10`, x: 2 }}
                                 >
                                   <span style={{ color: m.accent, display: 'flex', alignItems: 'center' }}>
                                     <ModuleIconSvg id={m.id} size={13} />
                                   </span>
-                                  <span style={{ fontSize: 12, color: unlocked ? 'var(--text)' : 'var(--muted)', fontWeight: m.id === activeModule ? 600 : 400 }}>
+                                  <span style={{ fontSize: 12, color: 'var(--text)', fontWeight: m.id === activeModule ? 600 : 400 }}>
                                     {m.label}
                                   </span>
-                                  {!unlocked ? (
-                                    <span
-                                      style={{
-                                        marginLeft: 'auto',
-                                        fontSize: 8,
-                                        fontWeight: 800,
-                                        letterSpacing: '0.04em',
-                                        textTransform: 'uppercase',
-                                        color: 'var(--muted)',
-                                        border: '1px solid var(--border)',
-                                        borderRadius: 999,
-                                        padding: '2px 6px',
-                                      }}
-                                    >
-                                      Locked
-                                    </span>
-                                  ) : m.id === activeModule && (
+                                  {m.id === activeModule && (
                                     <div style={{ width: 5, height: 5, borderRadius: '50%', background: m.accent, marginLeft: 'auto' }} />
                                   )}
                                 </motion.button>

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { CSSProperties } from 'react'
 import {
+  ALL_BILLING_MODULES,
   BILLING_MODULE_LABELS,
   BILLING_PLANS,
   MODULE_CREDIT_COSTS,
@@ -54,7 +55,7 @@ export default function PricingPage() {
               India-first pricing for founder velocity
             </h1>
             <p style={{ maxWidth: 720, margin: 0, fontSize: 16, color: 'var(--text-soft)', lineHeight: 1.7 }}>
-              Buy a plan, get monthly credits, and unlock the high-value Forze agents only when they actually matter.
+              Every module. Every plan. Just credits. Pick the plan that fits your pace.
             </p>
           </div>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -128,28 +129,7 @@ export default function PricingPage() {
                     {plan.ventureLimit} active venture{plan.ventureLimit === 1 ? '' : 's'}
                   </div>
                   <div>{plan.monthlyCredits} credits/month</div>
-                  <div>{plan.allowedModules.length} unlocked modules</div>
-                </div>
-                <div style={{ marginTop: 20, paddingTop: 18, borderTop: '1px solid var(--border)' }}>
-                  <div
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 700,
-                      color: 'var(--muted)',
-                      letterSpacing: '0.08em',
-                      textTransform: 'uppercase',
-                      marginBottom: 8,
-                    }}
-                  >
-                    Included
-                  </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {plan.allowedModules.map((moduleId) => (
-                      <span key={moduleId} style={pillStyle}>
-                        {BILLING_MODULE_LABELS[moduleId]}
-                      </span>
-                    ))}
-                  </div>
+                  <div>All {ALL_BILLING_MODULES.length} modules included</div>
                 </div>
                 <Link href="/signup" style={{ ...primaryBtnStyle, marginTop: 22, width: '100%', justifyContent: 'center' }}>
                   {plan.cta}
@@ -233,17 +213,4 @@ const secondaryBtnStyle: CSSProperties = {
   textDecoration: 'none',
   fontWeight: 700,
   border: '1px solid var(--border)',
-}
-
-const pillStyle: CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  padding: '6px 10px',
-  borderRadius: 999,
-  background: 'var(--accent-soft)',
-  border: '1px solid var(--accent-glow)',
-  color: 'var(--text)',
-  fontSize: 11,
-  fontWeight: 700,
-  letterSpacing: '0.02em',
 }
