@@ -64,6 +64,15 @@ const ContentOutputSchema = z.object({
         linkedin: [],
         instagram: []
     }),
+    // ── Decision Layer ──
+    priorityChannels: z.array(z.object({
+        channel: z.string(),
+        whyNow: z.string(),
+        whyNotNow: z.string(),
+    })).default([]),
+    goalPerAsset: z.record(z.string(), z.string()).default({}),
+    recommendedFirstMotion: z.string().default('First motion pending.'),
+    alignmentWarnings: z.array(z.string()).default([]),
 })
 
 export type ContentOutput = z.infer<typeof ContentOutputSchema>
@@ -106,6 +115,15 @@ const ContentEditPatchSchema = z.object({
         linkedin: z.array(z.string()).optional(),
         instagram: z.array(z.string()).optional(),
     }).optional(),
+    // ── Decision Layer ──
+    priorityChannels: z.array(z.object({
+        channel: z.string(),
+        whyNow: z.string(),
+        whyNotNow: z.string(),
+    })).optional(),
+    goalPerAsset: z.record(z.string(), z.string()).optional(),
+    recommendedFirstMotion: z.string().optional(),
+    alignmentWarnings: z.array(z.string()).optional(),
 })
 
 type ContentEditPatch = z.infer<typeof ContentEditPatchSchema>
@@ -134,6 +152,12 @@ function mergePatch(existing: ContentOutput, patch: ContentEditPatch): ContentOu
         if (patch.hashtagStrategy.linkedin) merged.hashtagStrategy.linkedin = patch.hashtagStrategy.linkedin
         if (patch.hashtagStrategy.instagram) merged.hashtagStrategy.instagram = patch.hashtagStrategy.instagram
     }
+
+    // Decision layer
+    if (patch.priorityChannels) merged.priorityChannels = patch.priorityChannels
+    if (patch.goalPerAsset) merged.goalPerAsset = patch.goalPerAsset
+    if (patch.recommendedFirstMotion !== undefined) merged.recommendedFirstMotion = patch.recommendedFirstMotion
+    if (patch.alignmentWarnings) merged.alignmentWarnings = patch.alignmentWarnings
 
     return merged
 }
@@ -222,7 +246,24 @@ Day 0 through Day 14:
 - Body outline (3–5 bullet points)
 - Primary CTA
 
-### 5. Hashtag Strategy
+### 5. Decision Layer (REQUIRED)
+Before the full content package, produce these sharp recommendations:
+- **priorityChannels**: Top 2-3 channels ranked by expected impact for THIS specific venture. For each channel provide:
+  - channel: platform name
+  - whyNow: Why this channel is the right pick for this venture right now (cite research data)
+  - whyNotNow: The honest risk or reason this channel might not work
+- **goalPerAsset**: Map each content type to its specific conversion goal (e.g. {"SEO blog #1": "capture email from 'how to X' searches", "LinkedIn post day 3": "drive demo signups from engineering managers"})
+- **recommendedFirstMotion**: The single most important marketing action in the first 48 hours after launch. Be specific — not "post on social media" but "post a Show HN with this angle: [specific angle]".
+- **alignmentWarnings**: If messaging, positioning, or target audience contradicts research, branding, or landing page data, list each discrepancy. Empty array if aligned.
+
+### 5.5. Cross-Module Alignment Check
+Verify against all prior modules:
+- Marketing channels must match where Genesis's target customer actually spends time
+- Brand voice in captions must match Identity's tone of voice
+- Landing page CTA must align with email sequence flow
+- If contradictions exist, populate alignmentWarnings
+
+### 6. Hashtag Strategy
 Platform-specific sets:
 - X: 2–4 hashtags per post (trending + niche)
 - LinkedIn: 3–5 hashtags (professional + industry)
@@ -282,7 +323,11 @@ Output your full marketing package as a single JSON object matching this exact s
     "x": ["string"],
     "linkedin": ["string"],
     "instagram": ["string"]
-  }
+  },
+  "priorityChannels": [{"channel": "string", "whyNow": "string", "whyNotNow": "string"}],
+  "goalPerAsset": {"asset name": "conversion goal"},
+  "recommendedFirstMotion": "string (specific action for first 48 hours)",
+  "alignmentWarnings": ["string (empty array if aligned)"]
 }
 
 CRITICAL OUTPUT INSTRUCTION:
