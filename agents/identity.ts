@@ -61,6 +61,16 @@ const IdentityOutputSchema = z.object({
         buttonStyle: 'Filled with rounded corners',
         cardStyle: 'Elevated with subtle shadow'
     }),
+    // ── Decision Layer ──
+    buyerFitRationale: z.string().default('Buyer fit analysis pending.'),
+    nameScores: z.array(z.object({
+        name: z.string(),
+        score: z.number().min(1).max(10),
+        rationale: z.string(),
+    })).default([]),
+    conversionRisks: z.array(z.string()).default([]),
+    recommendedBrandDirection: z.string().default('Brand direction pending.'),
+    alignmentWarnings: z.array(z.string()).default([]),
 })
 
 export type IdentityOutput = z.infer<typeof IdentityOutputSchema>
@@ -99,6 +109,16 @@ const IdentityEditPatchSchema = z.object({
         buttonStyle: z.string().optional(),
         cardStyle: z.string().optional(),
     }).optional(),
+    // ── Decision Layer ──
+    buyerFitRationale: z.string().optional(),
+    nameScores: z.array(z.object({
+        name: z.string(),
+        score: z.number().min(1).max(10),
+        rationale: z.string(),
+    })).optional(),
+    conversionRisks: z.array(z.string()).optional(),
+    recommendedBrandDirection: z.string().optional(),
+    alignmentWarnings: z.array(z.string()).optional(),
 })
 
 type IdentityEditPatch = z.infer<typeof IdentityEditPatchSchema>
@@ -130,6 +150,13 @@ function mergePatch(existing: IdentityOutput, patch: IdentityEditPatch): Identit
     }
     if (patch.typography) merged.typography = { ...existing.typography, ...patch.typography }
     if (patch.uiKitSpec) merged.uiKitSpec = { ...existing.uiKitSpec, ...patch.uiKitSpec }
+
+    // Decision layer
+    if (patch.buyerFitRationale !== undefined) merged.buyerFitRationale = patch.buyerFitRationale
+    if (patch.nameScores) merged.nameScores = patch.nameScores
+    if (patch.conversionRisks) merged.conversionRisks = patch.conversionRisks
+    if (patch.recommendedBrandDirection !== undefined) merged.recommendedBrandDirection = patch.recommendedBrandDirection
+    if (patch.alignmentWarnings) merged.alignmentWarnings = patch.alignmentWarnings
 
     return merged
 }
@@ -220,7 +247,21 @@ You are Forze's brand creation agent. You build brands that feel inevitable — 
 - Card style (elevated/flat/bordered)
 - Component feel (dense/airy/balanced)
 
-### 10. Comprehensive Brand Bible Document
+### 10. Decision Layer (REQUIRED)
+- **buyerFitRationale**: Why this brand identity will resonate with the specific target customer segment from Genesis research. Cite the pain points and psychographics.
+- **nameScores**: Score each of the 5 name candidates (1-10) with rationale for why the name fits the target buyer, market, and positioning.
+- **conversionRisks**: 2-3 risks where the brand identity might hurt conversion (e.g. "name too playful for enterprise buyers", "colors don't convey trust for fintech").
+- **recommendedBrandDirection**: One-paragraph synthesis of the overall brand strategy and why it's the right direction for this specific market.
+- **alignmentWarnings**: If target customer, pricing posture, or promise differs from Genesis research, list each discrepancy. Empty array if aligned.
+
+### 11. Cross-Module Alignment Check
+Before finalizing, verify against Genesis research:
+- Brand voice must speak to the pain points Genesis identified
+- Color psychology must match the target audience's expectations
+- Name candidates must work for the specific market segment
+- If you find contradictions, populate alignmentWarnings
+
+### 12. Comprehensive Brand Bible Document
 Write a long-form, professional "Brand Identity & Design Bible".
 - Target length: 1000+ words.
 - Format: Professional Markdown with headers and visual descriptions.
@@ -279,7 +320,12 @@ Output your final Brand Bible as a single JSON object matching this exact struct
     "spacing": "string",
     "buttonStyle": "string",
     "cardStyle": "string"
-  }
+  },
+  "buyerFitRationale": "string",
+  "nameScores": [{"name": "string", "score": 1-10, "rationale": "string"}],
+  "conversionRisks": ["string"],
+  "recommendedBrandDirection": "string",
+  "alignmentWarnings": ["string (empty array if aligned with research)"]
 }
 
 CRITICAL OUTPUT INSTRUCTION:
