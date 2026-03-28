@@ -88,7 +88,7 @@ export const BILLING_PLANS: Record<PlanSlug, BillingPlan> = {
     monthlyPriceInr: 0,
     yearlyPriceInr: 0,
     ventureLimit: 1,
-    monthlyCredits: 30,
+    monthlyCredits: 25,
     allowedModules: ALL_BILLING_MODULES,
     cta: 'Start free',
   },
