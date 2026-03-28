@@ -95,45 +95,32 @@ ${venture.globalIdea ? `Global Startup Vision: ${venture.globalIdea}\n` : ''}
   await onAgentStatus('branding', 'complete')
   await onStream('\n\n')
 
-  // ── STEP 2.5 — Content Factory (requires Branding) ──────────────────────────
+  // ── STEP 3 — Marketing + Landing + Feasibility in PARALLEL ─────────────────
+  // All three only need research + branding — none depend on each other.
 
   await onAgentStatus('marketing', 'running')
-  await onStream('=== Content Factory: Marketing Strategy ===\n\n')
-
-  let marketingResult: ContentOutput | null = null
-
-  try {
-    await runContentAgent(venture, onStream, async (result) => {
-      marketingResult = result
-      venture = { ...venture, context: { ...venture.context, marketing: result } }
-    }, history)
-
-    if (!marketingResult) throw new Error('Marketing agent produced no output')
-    await onAgentStatus('marketing', 'complete')
-  } catch (marketingErr) {
-    await onAgentStatus('marketing', 'failed')
-    await onStream('\n[Content Factory failed: ' + (marketingErr instanceof Error ? marketingErr.message : String(marketingErr)) + ']\n')
-  }
-  await onStream('\n\n')
-
-  // --- STEP 3 — Pipeline + Feasibility in PARALLEL ---------------------------
-
   await onAgentStatus('landing', 'running')
   await onAgentStatus('feasibility', 'running')
-  await onStream('=== Finalizing Production Pipeline & Strategic Validation ===\n\n')
+  await onStream('=== Running Marketing, Landing & Feasibility in parallel ===\n\n')
 
-  // Pass ALL context to both agents: Genesis, Identity, AND Marketing
-  const enrichedVenture = { 
-    ...venture, 
-    context: { 
-      ...venture.context, 
+  const enrichedVenture = {
+    ...venture,
+    context: {
+      ...venture.context,
       research: genesisResult,
       branding: identityResult,
-      marketing: marketingResult
-    } 
+    }
   }
 
-  const [landingSettled, feasibilitySettled] = await Promise.allSettled([
+  const [marketingSettled, landingSettled, feasibilitySettled] = await Promise.allSettled([
+    new Promise<ContentOutput>((resolve, reject) => {
+      runContentAgent(
+        enrichedVenture,
+        async (chunk) => onStream('[Marketing] ' + chunk),
+        async (result) => resolve(result),
+        history
+      ).catch(reject)
+    }),
     new Promise<PipelineOutput>((resolve, reject) => {
       runPipelineAgent(
         enrichedVenture,
@@ -153,8 +140,17 @@ ${venture.globalIdea ? `Global Startup Vision: ${venture.globalIdea}\n` : ''}
     }),
   ])
 
+  let marketingResult: ContentOutput | null = null
   let landingResult: PipelineOutput | null = null
   let feasibilityResult: FeasibilityOutput | null = null
+
+  if (marketingSettled.status === 'fulfilled') {
+    marketingResult = marketingSettled.value
+    await onAgentStatus('marketing', 'complete')
+  } else {
+    await onAgentStatus('marketing', 'failed')
+    await onStream('\n[Content Factory failed: ' + (marketingSettled.reason as Error)?.message + ']\n')
+  }
 
   if (landingSettled.status === 'fulfilled') {
     landingResult = landingSettled.value
