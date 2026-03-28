@@ -424,6 +424,7 @@ export default function ModulePage() {
         nextRenewalAt: data.nextRenewalAt ?? null,
         hasUnlimitedAccess: !!data.hasUnlimitedAccess,
       })
+      window.dispatchEvent(new CustomEvent('Forze:credits-changed', { detail: { creditsRemaining: data.creditsRemaining } }))
     } catch {
       // Ignore local billing fetch issues here; the server still enforces access.
     } finally {
