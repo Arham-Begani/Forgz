@@ -80,6 +80,12 @@ const GenesisOutputSchema = z.object({
         })
     ).default([]),
     recommendedConcept: z.string().default('Concept candidate pending.'),
+    // ── Decision Layer ──
+    bestCustomerSegment: z.string().default('Segment analysis pending.'),
+    bestWedge: z.string().default('Wedge analysis pending.'),
+    bestChannels: z.array(z.string()).default([]),
+    biggestTrap: z.string().default('Trap analysis pending.'),
+    recommendedNextStep: z.string().default('Next step pending.'),
 })
 
 export type GenesisOutput = z.infer<typeof GenesisOutputSchema>
@@ -132,6 +138,12 @@ const GenesisEditPatchSchema = z.object({
         rationale: z.string().default('No rationale provided.'),
     })).optional(),
     recommendedConcept: z.string().optional(),
+    // ── Decision Layer ──
+    bestCustomerSegment: z.string().optional(),
+    bestWedge: z.string().optional(),
+    bestChannels: z.array(z.string()).optional(),
+    biggestTrap: z.string().optional(),
+    recommendedNextStep: z.string().optional(),
 })
 
 type GenesisEditPatch = z.infer<typeof GenesisEditPatchSchema>
@@ -163,6 +175,13 @@ function mergePatch(existing: GenesisOutput, patch: GenesisEditPatch): GenesisOu
     if (patch.competitors) merged.competitors = patch.competitors
     if (patch.riskMatrix) merged.riskMatrix = patch.riskMatrix
     if (patch.topConcepts) merged.topConcepts = patch.topConcepts
+
+    // Decision layer
+    if (patch.bestCustomerSegment !== undefined) merged.bestCustomerSegment = patch.bestCustomerSegment
+    if (patch.bestWedge !== undefined) merged.bestWedge = patch.bestWedge
+    if (patch.bestChannels) merged.bestChannels = patch.bestChannels
+    if (patch.biggestTrap !== undefined) merged.biggestTrap = patch.biggestTrap
+    if (patch.recommendedNextStep !== undefined) merged.recommendedNextStep = patch.recommendedNextStep
 
     return merged
 }
@@ -222,6 +241,14 @@ Identify 12 specific risks. Score each by likelihood (high/medium/low) and impac
 
 ### Step 6 — Concept Generation
 Produce 10 ranked business concepts that could fill the identified gap. Score each by opportunity (1–10) with clear rationale.
+
+### Step 6.5 — Decision Layer (REQUIRED)
+After your research, produce these sharp recommendations citing specific evidence:
+- **bestCustomerSegment**: The single most promising customer segment. Name them specifically (e.g. "Solo SaaS founders doing $10K-$50K MRR"), not generically.
+- **bestWedge**: The narrowest, most winnable entry point into this market. One sentence.
+- **bestChannels**: Top 2-3 acquisition channels with rationale from your research (e.g. which Reddit communities, which influencers, which content types).
+- **biggestTrap**: The most dangerous mistake a founder could make in this space — cite a specific competitor failure or market pattern you found.
+- **recommendedNextStep**: The single most important thing the founder should do in the next 7 days to validate this concept.
 
 ### Step 7 — Detailed Research Paper
 Write a comprehensive, professional "Market Research & Venture Opportunity Paper". 
@@ -315,7 +342,12 @@ Output your final findings as a single JSON object matching this exact structure
         "topConcepts": [
             { "name": "string", "description": "string", "opportunityScore": 1 - 10, "rationale": "string" }
         ],
-            "recommendedConcept": "string"
+            "recommendedConcept": "string",
+    "bestCustomerSegment": "string (specific segment, not generic)",
+    "bestWedge": "string (narrowest entry point)",
+    "bestChannels": ["string (top 2-3 channels with rationale)"],
+    "biggestTrap": "string (most dangerous mistake, cite evidence)",
+    "recommendedNextStep": "string (one action for next 7 days)"
 }
 \`\`\`
 
