@@ -74,6 +74,13 @@ const PipelineOutputSchema = z.object({
         description: 'Built with Forze AI.',
         keywords: []
     }),
+    // ── Decision Layer ──
+    positioningAngles: z.array(z.string()).default([]),
+    headlineWeaknesses: z.array(z.string()).default([]),
+    ctaWeaknesses: z.array(z.string()).default([]),
+    sectionToPainPointMap: z.record(z.string(), z.string()).default({}),
+    recommendedPageDirection: z.string().default('Page direction pending.'),
+    alignmentWarnings: z.array(z.string()).default([]),
 })
 
 export type PipelineOutput = z.infer<typeof PipelineOutputSchema>
@@ -124,6 +131,13 @@ const PipelineEditPatchSchema = z.object({
         description: z.string().optional(),
         keywords: z.array(z.string()).optional(),
     }).optional(),
+    // ── Decision Layer ──
+    positioningAngles: z.array(z.string()).optional(),
+    headlineWeaknesses: z.array(z.string()).optional(),
+    ctaWeaknesses: z.array(z.string()).optional(),
+    sectionToPainPointMap: z.record(z.string(), z.string()).optional(),
+    recommendedPageDirection: z.string().optional(),
+    alignmentWarnings: z.array(z.string()).optional(),
 })
 
 type PipelineEditPatch = z.infer<typeof PipelineEditPatchSchema>
@@ -156,6 +170,14 @@ function mergePatch(existing: PipelineOutput, patch: PipelineEditPatch): Pipelin
             ...patch.seoMetadata,
         }
     }
+
+    // Decision layer
+    if (patch.positioningAngles) merged.positioningAngles = patch.positioningAngles
+    if (patch.headlineWeaknesses) merged.headlineWeaknesses = patch.headlineWeaknesses
+    if (patch.ctaWeaknesses) merged.ctaWeaknesses = patch.ctaWeaknesses
+    if (patch.sectionToPainPointMap) merged.sectionToPainPointMap = patch.sectionToPainPointMap
+    if (patch.recommendedPageDirection !== undefined) merged.recommendedPageDirection = patch.recommendedPageDirection
+    if (patch.alignmentWarnings) merged.alignmentWarnings = patch.alignmentWarnings
 
     return merged
 }
@@ -279,7 +301,23 @@ The landing page is built with:
 - Forms: Client-side validation + API-ready POST handler
 - SEO: Full meta tags, Open Graph ready
 
-### 5. SEO Metadata
+### 5. Decision Layer (REQUIRED)
+Before writing copy, analyze the venture's positioning critically:
+- **positioningAngles**: 2-3 distinct positioning angles this page could take (e.g. "cost-savings leader", "simplicity play", "premium expert tool"). Name each with a one-sentence explanation.
+- **headlineWeaknesses**: 1-2 weaknesses of the headline you chose — what objection does it fail to address? What audience might it alienate?
+- **ctaWeaknesses**: 1-2 weaknesses of the CTAs — are they too aggressive? Too passive? Missing urgency or specificity?
+- **sectionToPainPointMap**: Map each page section to the specific pain point from research it addresses. If a section doesn't map to a real pain point, flag it.
+- **recommendedPageDirection**: One-paragraph synthesis of why this page layout and messaging approach is the right direction.
+- **alignmentWarnings**: If the hero headline, value proposition, or pricing contradicts research or branding data, list each discrepancy. Empty array if aligned.
+
+### 6. Cross-Module Alignment Check
+Verify against research and branding:
+- Hero headline must reference the #1 pain point from Genesis research
+- Copy tone must match Identity's brand voice
+- Pricing tiers must align with market research positioning
+- If contradictions exist, populate alignmentWarnings
+
+### 7. SEO Metadata
 - Title: brand name + primary value prop (under 60 chars)
 - Description: compelling meta description with keywords (under 160 chars)
 - Keywords: 8-12 relevant keywords based on research findings
@@ -326,7 +364,13 @@ The landing page is built with:
     "title": "string (under 60 chars)",
     "description": "string (under 160 chars)",
     "keywords": ["string (8-12 keywords)"]
-  }
+  },
+  "positioningAngles": ["string (2-3 angles)"],
+  "headlineWeaknesses": ["string (1-2 weaknesses)"],
+  "ctaWeaknesses": ["string (1-2 weaknesses)"],
+  "sectionToPainPointMap": {"section": "pain point it addresses"},
+  "recommendedPageDirection": "string",
+  "alignmentWarnings": ["string (empty array if aligned)"]
 }
 
 CRITICAL OUTPUT INSTRUCTION:
