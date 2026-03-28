@@ -176,7 +176,7 @@ export function Hero() {
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
               display: 'inline-block',
-              minWidth: '320px',
+              minWidth: 'min(320px, 70vw)',
             }}>
               {displayed}
               <span style={{
