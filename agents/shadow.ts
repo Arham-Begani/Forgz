@@ -19,6 +19,9 @@ const ShadowBoardSchema = z.object({
             role: z.string().default('The Skeptic'), // "The Skeptic", "The Evangelist", "The Alchemist"
             thought: z.string().default('Thought pending.'),
             brutalHonesty: z.string().default('Honesty pending.'),
+            moduleEvidence: z.string().default('Evidence pending.'),
+            concreteFix: z.string().default('Fix pending.'),
+            fixThisThisWeek: z.string().default('Weekly action pending.'),
         })
     ).default([]),
     strategicPivots: z.array(
@@ -49,6 +52,9 @@ const ShadowBoardEditPatchSchema = z.object({
         role: z.string().default('The Skeptic'),
         thought: z.string().default('Thought pending.'),
         brutalHonesty: z.string().default('Honesty pending.'),
+        moduleEvidence: z.string().default('Evidence pending.'),
+        concreteFix: z.string().default('Fix pending.'),
+        fixThisThisWeek: z.string().default('Weekly action pending.'),
     })).optional(),
     strategicPivots: z.array(z.object({
         currentPath: z.string().default('Current path'),
@@ -140,7 +146,7 @@ You must output a single JSON object with EXACTLY this structure:
   "survivalScore": number (1-100),
   "verdictLabel": "string",
   "boardDialogue": [
-    { "role": "The Skeptic" | "The Evangelist" | "The Alchemist", "thought": "string", "brutalHonesty": "string" }
+    { "role": "The Skeptic" | "The Evangelist" | "The Alchemist", "thought": "string", "brutalHonesty": "string", "moduleEvidence": "string (cite exact data from research/feasibility/branding)", "concreteFix": "string (one specific, actionable fix)", "fixThisThisWeek": "string (what to do THIS WEEK to address this)" }
   ],
   "strategicPivots": [
     { "currentPath": "string", "betterPath": "string", "rationale": "string" }
@@ -155,6 +161,9 @@ You must output a single JSON object with EXACTLY this structure:
 - NEVER use corporate jargon like "deliverables" or "synergy".
 - Speak like high-level Silicon Valley operators.
 - The tone should be intense, intellectual, and slightly aggressive.
+- Each board member MUST cite exact evidence from the research, branding, or feasibility data — not generic opinions.
+- Each board member MUST provide one concrete, actionable fix — not "improve marketing" but "switch CTA from 'Learn More' to 'Start Free Trial' because feasibility shows 3% conversion assumption".
+- Each board member MUST end with fixThisThisWeek — the single highest-leverage thing the founder should change THIS WEEK.
 - Output ONLY the raw JSON at the very end. No Markdown fences around the JSON.
 - Use <think> tags for your internal persona debate before the final JSON.
 - Ensure sentiments are exactly "positive", "neutral", or "negative" (lowercase).
